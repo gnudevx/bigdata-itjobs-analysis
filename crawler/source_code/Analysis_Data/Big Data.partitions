@@ -1,0 +1,125 @@
+﻿<Cube xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ddl2="http://schemas.microsoft.com/analysisservices/2003/engine/2" xmlns:ddl2_2="http://schemas.microsoft.com/analysisservices/2003/engine/2/2" xmlns:ddl100_100="http://schemas.microsoft.com/analysisservices/2008/engine/100/100" xmlns:ddl200="http://schemas.microsoft.com/analysisservices/2010/engine/200" xmlns:ddl200_200="http://schemas.microsoft.com/analysisservices/2010/engine/200/200" xmlns:ddl300="http://schemas.microsoft.com/analysisservices/2011/engine/300" xmlns:ddl300_300="http://schemas.microsoft.com/analysisservices/2011/engine/300/300" xmlns:ddl400="http://schemas.microsoft.com/analysisservices/2012/engine/400" xmlns:ddl400_400="http://schemas.microsoft.com/analysisservices/2012/engine/400/400" xmlns:ddl500="http://schemas.microsoft.com/analysisservices/2013/engine/500" xmlns:ddl500_500="http://schemas.microsoft.com/analysisservices/2013/engine/500/500" xmlns:dwd="http://schemas.microsoft.com/DataWarehouse/Designer/1.0" dwd:design-time-name="f600a7e3-0871-4776-b691-25c62de63eff" xmlns="http://schemas.microsoft.com/analysisservices/2003/engine">
+  <ID>Big Data</ID>
+  <MeasureGroups>
+    <MeasureGroup>
+      <ID>Job Details</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="edb35df3-97a0-4d6e-8d2a-3e7348f1a119">
+          <ID>Job Details</ID>
+          <Name>Job Details</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="3c3a3f87-f932-4e5b-902c-cc90001e2eeb">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_job_details</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+    <MeasureGroup>
+      <ID>Job Skills</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="a31e5702-3e74-4f7d-aee8-749ff8f13360">
+          <ID>Job Skills</ID>
+          <Name>Job Skills</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="eea45d11-9536-4783-83f5-0769f4f6e7d4">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_job_skills</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+    <MeasureGroup>
+      <ID>Jobs</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="9b378063-bdba-43d8-8e80-9faa1055093d">
+          <ID>Jobs</ID>
+          <Name>Jobs</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="a8a41f2a-ce7e-4612-9704-0444e8eb34e6">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_jobs</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+    <MeasureGroup>
+      <ID>Skill Details</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="ac4a42e4-f9dd-462e-a919-65b9b0906a61">
+          <ID>Skill Details</ID>
+          <Name>Skill Details</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="c470c205-f197-441d-a8ba-0ff67581960b">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_skill_details</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+    <MeasureGroup>
+      <ID>Skills</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="90105028-e5e9-4151-b4ad-bce2fc74f34e">
+          <ID>Skills</ID>
+          <Name>Skills</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="d2c7459d-f768-430c-834e-b7fd8861ea31">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_skills</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+    <MeasureGroup>
+      <ID>Skill Groups</ID>
+      <Partitions>
+        <Partition dwd:design-time-name="1876dcff-6ffc-48fa-97c8-cf550a45207e">
+          <ID>Skill Groups</ID>
+          <Name>Skill Groups</Name>
+          <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+          <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+          <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+          <State>Unprocessed</State>
+          <Source xsi:type="DsvTableBinding" dwd:design-time-name="b72ba6b6-8d1c-4186-a42c-5338eb887947">
+            <DataSourceViewID>Big Data</DataSourceViewID>
+            <TableID>dbo_skill_groups</TableID>
+          </Source>
+          <StorageMode>Molap</StorageMode>
+          <CurrentStorageMode>Molap</CurrentStorageMode>
+          <ProcessingMode>Regular</ProcessingMode>
+        </Partition>
+      </Partitions>
+    </MeasureGroup>
+  </MeasureGroups>
+</Cube>

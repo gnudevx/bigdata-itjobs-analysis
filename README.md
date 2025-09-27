@@ -39,49 +39,38 @@ bigdata-itjobs-analysis/
     ├── Log/
     └── Output/ 
 ``` </pre>
-🚀 How to Run the Project
-1. Build & Start Containers
-# Go to config folder
-cd config-hadoop-hive-spark/
+## 🚀 How to Run the Project
 
-# Build images
-docker compose build --no-cache
+| Step | Description | Command |
+|------|-------------|---------|
+| **1. Build & Start Containers** | Go to config folder | `cd config-hadoop-hive-spark/` |
+| | Build images | `docker compose build --no-cache` |
+| | Start cluster | `docker compose up -d` |
+| | Check running containers | `docker ps` |
 
-# Start cluster
-docker compose up -d
+---
 
-# Check running containers
-docker ps
+| Step | Description | Command |
+|------|-------------|---------|
+| **2. Hadoop (HDFS) – Basic Commands** | Enter Hadoop master container | `docker exec -it hadoop-master bash` |
+| | Put file into HDFS | `hdfs dfs -put /tmp/local.csv /user/hadoop/` |
+| | List files | `hdfs dfs -ls /user/hadoop/` |
+| | Read file | `hdfs dfs -cat /user/hadoop/local.csv` |
 
-2. Hadoop (HDFS) – Basic Commands
-# Enter Hadoop master container
-docker exec -it hadoop-master bash
+---
 
-# Put file into HDFS
-hdfs dfs -put /tmp/local.csv /user/hadoop/
+| Step | Description | Command |
+|------|-------------|---------|
+| **3. Spark – Run Jobs** | Run Python job | `docker exec -it spark-master spark-submit --master yarn /spark_jobs/job.py` |
+| | Run Scala/Java JAR | `docker exec -it spark-master spark-submit --master yarn /spark_jobs/app.jar` |
 
-# List files
-hdfs dfs -ls /user/hadoop/
+---
 
-# Read file
-hdfs dfs -cat /user/hadoop/local.csv
-
-3. Spark – Run Jobs
-# Run Python job
-docker exec -it spark-master spark-submit \
-  --master yarn /spark_jobs/job.py
-
-# Run Scala/Java JAR
-docker exec -it spark-master spark-submit \
-  --master yarn /spark_jobs/app.jar
-
-4. Hive – Query Data
-# Open Hive CLI
-docker exec -it hive-server hive
-
-# Run queries
-CREATE DATABASE demo;
-USE demo;
-CREATE TABLE users(id INT, name STRING);
-LOAD DATA INPATH '/user/hadoop/users.csv' INTO TABLE users;
-SELECT * FROM users;
+| Step | Description | Command |
+|------|-------------|---------|
+| **4. Hive – Query Data** | Open Hive CLI | `docker exec -it hive-server hive` |
+| | Create database | `CREATE DATABASE demo;` |
+| | Use database | `USE demo;` |
+| | Create table | `CREATE TABLE users(id INT, name STRING);` |
+| | Load data | `LOAD DATA INPATH '/user/hadoop/users.csv' INTO TABLE users;` |
+| | Query data | `SELECT * FROM users;` |

@@ -56,6 +56,7 @@ docker compose up -d
 docker ps
 
 ### 2. Hadoop (HDFS) – Basic Commands
+```bash
 - you can entry for docker master and run basic commands
 # Put file into HDFS
 hdfs dfs -put /tmp/local.csv /user/hadoop/
@@ -67,6 +68,7 @@ hdfs dfs -ls /user/hadoop/
 hdfs dfs -cat /user/hadoop/local.csv
 
 ### 3. Spark – Run Jobs
+```bash
 # Run Python job
 docker exec -it spark-master spark-submit \
   --master yarn /spark_jobs/job.py
@@ -76,6 +78,7 @@ docker exec -it spark-master spark-submit \
   --master yarn /spark_jobs/app.jar
 
 ### 4. Hive – Query Data
+```bash
 docker exec -it hive-server hive
 
 CREATE DATABASE demo;

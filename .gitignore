@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+package.json
+
+config-hadoop-hive-spark/hadoop-base/hadoop-config/hadoop-3.4.1.tar.gz
+config-hadoop-hive-spark/hadoop-base/spark-config/spark-4.0.1-bin-hadoop3.tgz
+config-hadoop-hive-spark/hive/config/apache-hive-3.1.3-bin.tar.gz
+config-hadoop-hive-spark/hive/config/hadoop-3.3.6.tar.gz
+config-hadoop-hive-spark/hadoop_data/

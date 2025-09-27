@@ -1,0 +1,9 @@
+{
+    "name": "Hadoop Cluster",
+    "dockerComposeFile": [
+        "../compose.yaml"
+    ],
+    "service": "hadoop-master",
+    "workspaceFolder": "/home/hadoopducdung",
+    "remoteUser": "hadoopducdung"
+}

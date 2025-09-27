@@ -51,10 +51,9 @@ docker compose build --no-cache
 
 # Start cluster
 docker compose up -d
-
+```bash
 # Check running containers
 docker ps
-
 ### 2. Hadoop (HDFS) – Basic Commands
 ```bash
 - you can entry for docker master and run basic commands
@@ -66,7 +65,7 @@ hdfs dfs -ls /user/hadoop/
 
 # Read file
 hdfs dfs -cat /user/hadoop/local.csv
-
+```bash
 ### 3. Spark – Run Jobs
 ```bash
 # Run Python job
@@ -76,7 +75,7 @@ docker exec -it spark-master spark-submit \
 # Run Scala/Java JAR
 docker exec -it spark-master spark-submit \
   --master yarn /spark_jobs/app.jar
-
+```bash
 ### 4. Hive – Query Data
 ```bash
 docker exec -it hive-server hive
@@ -86,3 +85,4 @@ USE demo;
 CREATE TABLE users(id INT, name STRING);
 LOAD DATA INPATH '/user/hadoop/users.csv' INTO TABLE users;
 SELECT * FROM users;
+```bash

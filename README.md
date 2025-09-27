@@ -1,5 +1,6 @@
 # 🚀 Big Data IT Jobs Analysis
 **Project Structure**
+<pre> ```bash
 bigdata-itjobs-analysis/
 │
 ├── config-hadoop-hive-spark/   # All for docker-compose + config cho Hadoop, Spark, Hive
@@ -36,7 +37,8 @@ bigdata-itjobs-analysis/
 └── spark_jobs/                 # Spark jobs (ETL, data processing)
     ├── Code/
     ├── Log/
-    └── Output/
+    └── Output/ 
+``` </pre>
 **How to Run the Project**
 1️⃣ Build & Start Containers
 # Go to config folder

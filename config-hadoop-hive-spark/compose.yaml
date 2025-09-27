@@ -25,6 +25,7 @@ services:
     volumes:
       - ./hadoop_data/namenode:/home/hadoopducdung/hadoop/hadoop_data/hdfs/namenode
       - hadoop-logs:/home/hadoopducdung/hadoop/logs
+      - ./spark_jobs/Code:/opt/spark_jobs
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave:
     build:
@@ -77,6 +78,7 @@ services:
       - "10002:10002" # Beeline
     volumes:
       - hive-warehouse:/user/hive/warehouse
+      - ./hive_scripts/HiveSQL:/opt/hive_scripts
 
 volumes:
   hdfs-name:

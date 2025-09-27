@@ -39,13 +39,15 @@ bigdata-itjobs-analysis/
     ├── Log/
     └── Output/ 
 ``` </pre>
-**How to Run the Project**
-1️⃣ Build & Start Containers
+## 🚀 How to Run the Project
+
+### 1. Build & Start Containers
+```bash
 # Go to config folder
 cd config-hadoop-hive-spark/
 
 # Build images
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Start cluster
 docker compose up -d
@@ -53,7 +55,7 @@ docker compose up -d
 # Check running containers
 docker ps
 
-2️⃣ Hadoop (HDFS) – Basic Commands
+### 2. Hadoop (HDFS) – Basic Commands
 - you can entry for docker master and run basic commands
 # Put file into HDFS
 hdfs dfs -put /tmp/local.csv /user/hadoop/
@@ -64,7 +66,7 @@ hdfs dfs -ls /user/hadoop/
 # Read file
 hdfs dfs -cat /user/hadoop/local.csv
 
-3️⃣ Spark – Run Jobs
+### 3. Spark – Run Jobs
 # Run Python job
 docker exec -it spark-master spark-submit \
   --master yarn /spark_jobs/job.py
@@ -73,7 +75,7 @@ docker exec -it spark-master spark-submit \
 docker exec -it spark-master spark-submit \
   --master yarn /spark_jobs/app.jar
 
-4️⃣ Hive – Query Data
+### 4. Hive – Query Data
 docker exec -it hive-server hive
 
 CREATE DATABASE demo;

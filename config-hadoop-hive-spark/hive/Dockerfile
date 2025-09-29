@@ -53,7 +53,9 @@ COPY config/core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 COPY config/hdfs-site.xml /opt/hadoop/etc/hadoop/hdfs-site.xml
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
 ENV HIVE_CONF_DIR=/opt/hive/conf
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER hadoopducdung
-
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["hive", "--service", "hiveserver2"]

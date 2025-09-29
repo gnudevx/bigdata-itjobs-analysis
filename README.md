@@ -43,7 +43,8 @@ bigdata-itjobs-analysis/
 
 | Step | Description              | Command                                                                 |
 |:----:|--------------------------|-------------------------------------------------------------------------|
-| **1** | Go to config folder      | `cd config-hadoop-hive-spark/`                                          |
+| **1** | Go to config folder      | `cd config-hadoop-hive-spark/`                                         |
+|       |                          | `docker build -t hadoop-base1 ./hadoop-base`                           |
 |      | Build images             | `docker compose build --no-cache`                                       |
 |      | Start cluster            | `docker compose up -d`                                                  |
 |      | Check running containers | `docker ps`                                                             |
@@ -54,6 +55,7 @@ bigdata-itjobs-analysis/
 | **3** | Run Python job          | `docker exec -it spark-master spark-submit --master yarn /spark_jobs/job.py` |
 |      | Run Scala/Java JAR       | `docker exec -it spark-master spark-submit --master yarn /spark_jobs/app.jar` |
 | **4** | Open Hive CLI           | `docker exec -it hive-server hive`                                      |
+|      | Create database          | `schematool -initSchema -dbType derby`                                              |
 |      | Create database          | `CREATE DATABASE demo;`                                                 |
 |      | Use database             | `USE demo;`                                                             |
 |      | Create table             | `CREATE TABLE users(id INT, name STRING);`                              |

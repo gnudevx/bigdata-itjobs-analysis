@@ -56,6 +56,7 @@ bigdata-itjobs-analysis/
 |      | Run Scala/Java JAR       | `docker exec -it spark-master spark-submit --master yarn /spark_jobs/app.jar` |
 | **4** | Open Hive CLI           | `docker exec -it hive-server hive`                                      |
 |      | entry first              | `schematool -dbType mysql -initSchema`                                  |
+|      | start service             | `hive --service metastore &`                                           |
 |      | Create database          | `CREATE DATABASE demo;`                                                 |
 |      | Use database             | `USE demo;`                                                             |
 |      | Create table             | `CREATE TABLE users(id INT, name STRING);`                              |

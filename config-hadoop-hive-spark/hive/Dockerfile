@@ -54,6 +54,7 @@ COPY config/hdfs-site.xml /opt/hadoop/etc/hadoop/hdfs-site.xml
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
 ENV HIVE_CONF_DIR=/opt/hive/conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER hadoopducdung

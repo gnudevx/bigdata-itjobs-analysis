@@ -1,45 +1,47 @@
 #!/bin/bash
 set -e
 
-ROLE=${ROLE:-datanode}
+ROLE=${ROLE:-datanode}   # set ROLE=master cho master service trong compose
 HADOOP_HOME=/home/hadoopducdung/hadoop
 DATA_ROOT=/home/hadoopducdung/hadoop/hadoop_data
 NN_DIR=${DATA_ROOT}/hdfs/namenode
 DN_DIR=${DATA_ROOT}/hdfs/datanode
 
-# Tạo key ssh để start-dfs.sh không bị treo
-if [ ! -f /home/hadoopducdung/.ssh/id_rsa ]; then
-  ssh-keygen -t rsa -P "" -f /home/hadoopducdung/.ssh/id_rsa
-  cat /home/hadoopducdung/.ssh/id_rsa.pub >> /home/hadoopducdung/.ssh/authorized_keys
-fi
-
 # ensure dirs and ownership
 mkdir -p "${NN_DIR}" "${DN_DIR}" "${HADOOP_HOME}/logs"
 chown -R hadoopducdung:hadoopducdung "${DATA_ROOT}" "${HADOOP_HOME}/logs" || true
 
-# Format only on master
+# 🔹 Dọn dẹp tiến trình cũ (nếu còn) + xóa pid file
+echo "=> Cleaning up old Hadoop processes and pid files..."
+pkill -f 'DataNode' || true
+pkill -f 'NodeManager' || true
+pkill -f 'NameNode' || true
+pkill -f 'ResourceManager' || true
+rm -f /tmp/hadoop-*.pid
+
+# Format only on master and only if not formatted yet
 if [ "$ROLE" = "master" ]; then
-  if [ ! -d "${NN_DIR}/current" ]; then
+  if [ ! -f "${NN_DIR}/current/VERSION" ]; then
     echo "=> Formatting NameNode (first-time only)..."
-    su - hadoopducdung -c "${HADOOP_HOME}/bin/hdfs namenode -format -nonInteractive"
+    su - hadoopducdung -c "${HADOOP_HOME}/bin/hdfs namenode -format -nonInteractive" || true
   else
-    echo "=> NameNode already formatted, skipping."
+    echo "=> NameNode already formatted, skipping format."
   fi
 fi
 
-# start ssh
+# start ssh (so other nodes can connect)
 service ssh start
-rm -f /tmp/hadoop-*/hadoop-*.pid
 
+# start Hadoop daemons according to role
 if [ "$ROLE" = "master" ]; then
-  echo "=> Starting HDFS + YARN on master..."
+  echo "=> Starting HDFS and YARN on master..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-dfs.sh"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-yarn.sh"
 else
-  echo "=> Starting datanode + nodemanager..."
+  echo "=> Starting datanode and nodemanager on worker..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/hadoop-daemon.sh start datanode"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/yarn-daemon.sh start nodemanager"
 fi
 
-# giữ container chạy
+# keep container alive
 tail -f /dev/null

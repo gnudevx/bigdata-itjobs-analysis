@@ -26,6 +26,7 @@ services:
       - ./hadoop_data/namenode:/home/hadoopducdung/hadoop/hadoop_data/hdfs/namenode
       - hadoop-logs:/home/hadoopducdung/hadoop/logs
       - ../spark_jobs/Code:/opt/spark_jobs
+      - ../crawler/Dataset:/opt/Dataset
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave:
     build:

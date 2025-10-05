@@ -12,18 +12,20 @@ def dataraw():
     dfs = []
 
     for f in files:
-        if os.path.getsize(f) > 0:  # bỏ file rỗng
+        if os.path.getsize(f) > 0:
             try:
                 with open(f, "r", encoding="utf-8") as file:
-                    first_char = file.read(1)
-                    file.seek(0)
-                    if first_char == "[":  # JSON array
-                        df_temp = pd.read_json(file, lines=False)
-                    else:  # JSON Lines
-                        df_temp = pd.read_json(file, lines=True)
-
-                df_temp["source"] = os.path.basename(f)
-                dfs.append(df_temp)
+                    data = json.load(file)
+                    rows = []
+                    for group_block in data:
+                        group = group_block.get("group", "")
+                        jobs = group_block.get("jobs", [])
+                        for job in jobs:
+                            job["group"] = group
+                            job["source"] = os.path.basename(f)
+                            rows.append(job)
+                    df_temp = pd.DataFrame(rows)
+                    dfs.append(df_temp)
             except Exception as e:
                 st.warning(f"Lỗi khi đọc {f}: {e}")
 
@@ -38,13 +40,14 @@ def dataraw():
     st.write("Các cột:", list(df.columns))
     st.write("Nguồn dữ liệu:", df['source'].unique())
 
-    # phân bố theo thành phố
+    # --- Phân bố theo thành phố ---
     if "location" in df.columns:
         st.subheader("Phân bố theo thành phố (Top 10)")
-        city_counts = df['location'].value_counts().head(10)
+        df["location"] = df["location"].fillna("Không rõ").replace("", "Không rõ")
+        city_counts = df["location"].value_counts().head(10)
         st.bar_chart(city_counts)
 
-    # phân bố mức lương
+    # --- Phân bố mức lương ---
     if 'salary' in df.columns:
         st.subheader("Phân bố mức lương")
         fig, ax = plt.subplots()

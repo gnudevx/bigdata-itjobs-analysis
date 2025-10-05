@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Lấy thông tin chi tiết job
-# Lấy thông tin chi tiết job
 def get_info(url, driver):
     driver.get(url)
     time.sleep(1)

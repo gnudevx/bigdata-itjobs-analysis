@@ -1,0 +1,39 @@
+2025-10-04 22:29:19,397 - INFO - patching driver executable C:\Users\Admin\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-10-04 22:29:31,778 - INFO - \u2192 Nhóm 'Qu\u1ea3n Lý D\u1ef1 Án' (skill_id=212034)
+2025-10-04 22:29:31,793 - INFO - \u2192 Nhóm 'Giao ti\u1ebfp' (skill_id=112843)
+2025-10-04 22:29:31,808 - INFO - \u2192 Nhóm 'Gi\u1ea3i quy\u1ebft v\u1ea5n \u0111\u1ec1' (skill_id=213600)
+2025-10-04 22:29:31,825 - INFO - \u2192 Nhóm 'Javascript' (skill_id=56)
+2025-10-04 22:29:31,841 - INFO - \u2192 Nhóm 'Phân Tích Nghi\u1ec7p V\u1ee5' (skill_id=212246)
+2025-10-04 22:29:31,862 - INFO - \u2192 Nhóm 'Khác' (skill_id=other)
+2025-10-04 22:29:31,903 - INFO - \u0110ã có 6 nhóm trong checkpoint: {'Làm vi\u1ec7c nhóm', 'Qu\u1ea3n Lý D\u1ef1 Án', 'phân tích yêu c\u1ea7u', 'Git', 'Khác', 'Javascript'}
+2025-10-04 22:29:31,903 - INFO - \u23e9 B\u1ecf qua nhóm Qu\u1ea3n Lý D\u1ef1 Án (\u0111ã crawl)
+2025-10-04 22:29:31,903 - INFO - 
+=== Crawl nhóm Giao ti\u1ebfp ===
+2025-10-04 22:29:35,584 - INFO - \u274c L\u1ed7i nhóm Giao ti\u1ebfp: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=141.0.7390.55); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+	GetHandleVerifier [0x0x1289d93+65891]
+	GetHandleVerifier [0x0x1289dd4+65956]
+	(No symbol) [0x0x109dca8]
+	(No symbol) [0x0x108ceb0]
+	(No symbol) [0x0x10ab884]
+	(No symbol) [0x0x1111c25]
+	(No symbol) [0x0x112c519]
+	(No symbol) [0x0x110b076]
+	(No symbol) [0x0x10dc37a]
+	(No symbol) [0x0x10dd224]
+	GetHandleVerifier [0x0x14f7e23+2613747]
+	GetHandleVerifier [0x0x14f2f5a+2593578]
+	GetHandleVerifier [0x0x12b1ac4+229012]
+	GetHandleVerifier [0x0x12a1e58+164392]
+	GetHandleVerifier [0x0x12a880d+191453]
+	GetHandleVerifier [0x0x1292148+99608]
+	GetHandleVerifier [0x0x12922e0+100016]
+	GetHandleVerifier [0x0x127c4ca+10394]
+	BaseThreadInitThunk [0x0x76845d49+25]
+	RtlInitializeExceptionChain [0x0x77a3d6db+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77a3d661+561]
+
+2025-10-04 22:29:35,585 - INFO - 
+=== Crawl nhóm Gi\u1ea3i quy\u1ebft v\u1ea5n \u0111\u1ec1 ===

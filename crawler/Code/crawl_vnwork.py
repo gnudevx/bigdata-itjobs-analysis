@@ -3,7 +3,7 @@ import json
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
-
+import os
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -166,10 +166,24 @@ def scrape_all(output_file):
         # ✅ Ghi file ngay sau mỗi skill
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(skill_groups, f, ensure_ascii=False, indent=4)
-
     driver.quit()
+def run_vnwork_crawler():
+    """Hàm entrypoint để Airflow gọi"""
+    today_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = "/opt/airflow/crawler/Dataset"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, f"vnwork_{today_str}.json")
+
+    print("🚀 Bắt đầu crawl VietnamWorks...")
+    scrape_all(output_file)
+    print(f"✅ Crawl xong, file lưu ở: {output_file}")
 
 
 if __name__ == "__main__":
-    output_file = "../Dataset/vnwork.json"
-    scrape_all(output_file)
+    run_vnwork_crawler()
+#     # output_file = "../Dataset/vnwork.json"
+#     today_str = datetime.now().strftime("%Y-%m-%d")
+#     output_dir = "/opt/airflow/crawler/Dataset"
+#     os.makedirs(output_dir, exist_ok=True)
+#     output_file = f"{output_dir}/vnwork_{today_str}.json"
+#     scrape_all(output_file)

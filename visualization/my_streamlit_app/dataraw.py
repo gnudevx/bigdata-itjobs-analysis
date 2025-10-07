@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def dataraw():
     st.title("📊 Phân tích dữ liệu tuyển dụng IT - Dữ liệu ban đầu")
 
-    files = glob.glob("../../crawler/Dataset/*.json")
+    files = glob.glob("../../spark_jobs/Output/*.json")
     dfs = []
 
     for f in files:
@@ -48,8 +48,8 @@ def dataraw():
         st.bar_chart(city_counts)
 
     # --- Phân bố mức lương ---
-    if 'salary' in df.columns:
+    if 'salary_raw' in df.columns:
         st.subheader("Phân bố mức lương")
         fig, ax = plt.subplots()
-        df['salary'].value_counts().head(20).plot(kind="barh", ax=ax)
+        df['salary_raw'].value_counts().head(20).plot(kind="barh", ax=ax)
         st.pyplot(fig)

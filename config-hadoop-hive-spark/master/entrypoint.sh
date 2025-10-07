@@ -11,9 +11,17 @@ DN_DIR=${DATA_ROOT}/hdfs/datanode
 mkdir -p "${NN_DIR}" "${DN_DIR}" "${HADOOP_HOME}/logs"
 chown -R hadoopducdung:hadoopducdung "${DATA_ROOT}" "${HADOOP_HOME}/logs" || true
 
+# 🔹 Dọn dẹp tiến trình cũ (nếu còn) + xóa pid file
+echo "=> Cleaning up old Hadoop processes and pid files..."
+pkill -f 'DataNode' || true
+pkill -f 'NodeManager' || true
+pkill -f 'NameNode' || true
+pkill -f 'ResourceManager' || true
+rm -f /tmp/hadoop-*.pid
+
 # Format only on master and only if not formatted yet
 if [ "$ROLE" = "master" ]; then
-  if [ ! -f "${NN_DIR}/current/VERSION" ] && [ ! -f "${NN_DIR}/current" ]; then
+  if [ ! -f "${NN_DIR}/current/VERSION" ]; then
     echo "=> Formatting NameNode (first-time only)..."
     su - hadoopducdung -c "${HADOOP_HOME}/bin/hdfs namenode -format -nonInteractive" || true
   else

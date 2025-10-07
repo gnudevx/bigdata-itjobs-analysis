@@ -1,0 +1,11 @@
+undetected-chromedriver
+selenium
+selenium-stealth
+beautifulsoup4
+lxml
+requests
+fake-useragent
+pandas
+numpy
+python-dateutil
+tqdm

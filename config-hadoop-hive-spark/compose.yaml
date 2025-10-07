@@ -26,6 +26,7 @@ services:
       - ./hadoop_data/namenode:/home/hadoopducdung/hadoop/hadoop_data/hdfs/namenode
       - hadoop-logs:/home/hadoopducdung/hadoop/logs
       - ../spark_jobs/Code:/opt/spark_jobs
+      - ../crawler/Dataset:/opt/Dataset
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave:
     build:
@@ -58,7 +59,24 @@ services:
       MYSQL_PASSWORD: hive
     volumes:
       - metastore-db-data:/var/lib/mysql
-
+  hive-metastore:
+    user: "hadoopducdung"
+    build: ./hive
+    container_name: hive-metastore
+    hostname: hive-metastore
+    environment:
+      HIVE_METASTORE_DB_HOST: metastore-db
+      HIVE_METASTORE_DB_USER: hive
+      HIVE_METASTORE_DB_PASS: hive
+      HADOOP_CONF_DIR: /opt/hadoop/etc/hadoop
+    depends_on:
+      - hadoop-master
+      - metastore-db
+    command: [ "hive", "--service", "metastore" ]
+    ports:
+      - "9083:9083" # Metastore Thrift
+    volumes:
+      - hive-warehouse:/user/hive/warehouse
   # Hive Metastore + Server2
   hive-server:
     user: "hadoopducdung"

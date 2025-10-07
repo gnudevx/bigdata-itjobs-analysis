@@ -18,7 +18,7 @@ chown -R hadoopducdung:hadoopducdung "${DATA_ROOT}" "${HADOOP_HOME}/logs" || tru
 
 # Format only on master and only if not formatted yet
 if [ "$ROLE" = "master" ]; then
-  if [ ! -f "${NN_DIR}/current/VERSION" ] && [ ! -f "${NN_DIR}/current" ]; then
+  if [ ! -d "${NN_DIR}/current" ]; then
     echo "=> Formatting NameNode (first-time only)..."
     su - hadoopducdung -c "${HADOOP_HOME}/bin/hdfs namenode -format -nonInteractive" || true
   else
@@ -36,10 +36,22 @@ if [ "$ROLE" = "master" ]; then
   echo "=> Starting HDFS and YARN on master..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-dfs.sh"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-yarn.sh"
+
+  echo "=> Initializing Hive Metastore schema (if not exists)..."
+  schematool -initSchema -dbType mysql -ifNotExists
+
+  echo "=> Starting Hive Metastore..."
+  hive --service metastore &
+  sleep 10
+
+  echo "=> Starting HiveServer2..."
+  hive --service hiveserver2 &
+
 else
   echo "=> Starting datanode and nodemanager on worker..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/hadoop-daemon.sh start datanode"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/yarn-daemon.sh start nodemanager"
 fi
-# keep container alive
-tail -f /dev/null
+
+# keep container alive + show logs
+tail -n 100 -f ${HADOOP_HOME}/logs/*.log

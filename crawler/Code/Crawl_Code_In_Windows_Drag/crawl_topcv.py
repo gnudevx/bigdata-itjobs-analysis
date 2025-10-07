@@ -14,6 +14,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.service import Service
 from datetime import datetime
 from bs4 import BeautifulSoup
+from selenium.common.exceptions import InvalidSessionIdException
 # ---------------------------
 # Config
 # ---------------------------
@@ -143,7 +144,7 @@ def get_skills_info(driver, retries=3):
             continue
 
         try:
-            WebDriverWait(driver, 40).until(
+            WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.list-top-skill"))
             )
             break
@@ -282,7 +283,6 @@ def scrape_jobs_on_current_filter(driver, sid, target_count=50):
                 driver.switch_to.window(driver.window_handles[0])
                 human_delay(1.5, 0.7)
                 continue
-
             # — phần crawl job chi tiết chạy ở đây —
             try:
                 title_elem = driver.find_element(By.CSS_SELECTOR, "h1.job-detail__info--title a")
@@ -292,6 +292,7 @@ def scrape_jobs_on_current_filter(driver, sid, target_count=50):
                 title = driver.title.strip()
                 if "topcv.vn" in title.lower():
                     title = "(no title)"
+                
             info = {"salary": "", "location": "", "experience": ""}
             for sec in driver.find_elements(By.CSS_SELECTOR, ".job-detail__info--section"):
                 try:
@@ -342,7 +343,6 @@ def scrape_jobs_on_current_filter(driver, sid, target_count=50):
 
     log(f"🎯 Đã crawl {len(jobs)} jobs cho filter {sid}")
     return jobs[:target_count]
-
 # ---------------------------
 # Ghi JSON
 # ---------------------------

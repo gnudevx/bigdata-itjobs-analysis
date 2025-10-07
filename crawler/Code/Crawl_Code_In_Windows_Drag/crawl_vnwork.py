@@ -4,9 +4,11 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 import os
+import shutil
+from selenium_stealth import stealth
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-
+from Code.core.driver_for_vnwork import init_vnwork_driver
 # Lấy thông tin chi tiết job
 def get_info(url, driver):
     driver.get(url)
@@ -139,16 +141,30 @@ def scrape_jobs_by_skill(driver, skill_name, skill_url, max_pages=50):
         page += 1
     return jobs
 
-def scrape_all(output_file):
-    options = uc.ChromeOptions()
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
+def scrape_all():
+    # ⚙️ Xóa cache cũ (tránh dính driver cũ)
+    driver = init_vnwork_driver(headless=True)
 
-    driver = uc.Chrome(options=options)
-
-    # Mở trang gốc để lấy danh sách skills
+    print("[INFO] Opening Vietnamworks...")
     driver.get("https://www.vietnamworks.com/viec-lam?q=it")
-    time.sleep(2)
+    time.sleep(8)
+
+    print("[DEBUG] URL:", driver.current_url)
+    print("[DEBUG] Title:", driver.title)
+    print("[DEBUG] PAGE LENGTH:", len(driver.page_source))
+
+    with open("/tmp/vnworks_debug.html", "w", encoding="utf-8") as f:
+        f.write(driver.page_source)
+
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    skills_div = soup.find("div", class_="skill-tag-details")
+    if not skills_div:
+        print("[WARN] Không tìm thấy skill-tag-details (có thể web chặn bot).")
+        driver.quit()
+        return
+
+    skill_elements = skills_div.find_all("div", class_="tag-wrapper")
+    print("[INFO] Found", len(skill_elements), "skills.")
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     skills_div = soup.find("div", class_="skill-tag-details")
@@ -162,28 +178,12 @@ def scrape_all(output_file):
 
         jobs = scrape_jobs_by_skill(driver, skill_name, skill_url)
         skill_groups.append({"group": skill_name, "jobs": jobs})
-
+        
         # ✅ Ghi file ngay sau mỗi skill
-        with open(output_file, "w", encoding="utf-8") as f:
+        with open("../vnwork2.json", "w", encoding="utf-8") as f:
             json.dump(skill_groups, f, ensure_ascii=False, indent=4)
     driver.quit()
-def run_vnwork_crawler():
-    """Hàm entrypoint để Airflow gọi"""
-    today_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    output_dir = "/opt/airflow/crawler/Dataset"
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, f"vnwork_{today_str}.json")
-
-    print("🚀 Bắt đầu crawl VietnamWorks...")
-    scrape_all(output_file)
-    print(f"✅ Crawl xong, file lưu ở: {output_file}")
-
-
+    
 if __name__ == "__main__":
-    run_vnwork_crawler()
-#     # output_file = "../Dataset/vnwork.json"
-#     today_str = datetime.now().strftime("%Y-%m-%d")
-#     output_dir = "/opt/airflow/crawler/Dataset"
-#     os.makedirs(output_dir, exist_ok=True)
-#     output_file = f"{output_dir}/vnwork_{today_str}.json"
-#     scrape_all(output_file)
+    output_file = "../Dataset/vnwork2.json"
+    scrape_all()

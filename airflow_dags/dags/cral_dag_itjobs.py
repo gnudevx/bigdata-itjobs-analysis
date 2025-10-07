@@ -25,7 +25,7 @@ default_args = {
 
 # Định nghĩa DAG
 with DAG(
-    dag_id='crawler_data_itjobs6',
+    dag_id='crawler_data_itjobs',
     default_args=default_args,
     description='Crawl TopCV jobs automatically every day',
     schedule='@daily',  
@@ -49,5 +49,5 @@ with DAG(
         python_callable=merge_crawl_results
     )
 
-    [crawl_topcv_task >> crawl_vnwork_task] >> merge_task # (bước này là tui lấy dữ liệu về xong rồi đưa vào merge) -> sau đấy là mấy bước xử lí sau ....
+    [ crawl_vnwork_task >>  crawl_topcv_task] >> merge_task # (bước này là tui lấy dữ liệu về xong rồi đưa vào merge) -> sau đấy là mấy bước xử lí sau ....
     

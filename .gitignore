@@ -13,6 +13,9 @@ airflow_dags/plugins/
 airflow_dags/dags/__pycache__/
 crawler/Code/__pycache__/
 crawler/Code/.vscode/
+crawler/Code/core/__pycache__/
+crawler/Code/modules/__pycache__/
+crawler/Code/config/__pycache__/
 crawler/Logs/
 crawler/chrome-profile-topcv
 crawler/chrome-profile-topcv-*

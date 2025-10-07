@@ -1,9 +1,8 @@
-# Dockerfile cơ bản cho Airflow + Chrome + undetected_chromedriver
 FROM apache/airflow:2.9.2-python3.12
 
 USER root
 
-# Cài Chrome và dependencies
+# Cài Chrome + dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget gnupg unzip fonts-liberation libappindicator3-1 xdg-utils \
     libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 \
@@ -15,12 +14,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get update && apt-get install -y --no-install-recommends google-chrome-stable && \
     rm -rf /var/lib/apt/lists/*
 
-# ⚡ Tạo /dev/shm để Chrome không crash
+# Cấu hình Chrome headless cho môi trường container
+ENV UDC_CHROME_PATH=/usr/bin/google-chrome
+ENV UDC_DATA_DIR=/tmp/undetected_chromedriver
+
 RUN mkdir -p /dev/shm && chmod 1777 /dev/shm
 
-# Trở lại user airflow
 USER airflow
 
-# Cài Python requirements
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt

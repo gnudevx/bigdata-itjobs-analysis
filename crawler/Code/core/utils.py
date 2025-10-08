@@ -46,15 +46,22 @@ def human_delay(min_sec=1, max_sec=3):
     time.sleep(random.uniform(min_sec, max_sec))
 
 def save_json(data, filepath):
+    """Ghi thêm dữ liệu vào JSON (append) mà không ghi đè."""
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    existing = []
     if os.path.exists(filepath):
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 existing = json.load(f)
-        except:
+        except Exception:
             existing = []
+    
+    # Gộp dữ liệu mới vào
+    if isinstance(existing, list):
+        existing.extend(data if isinstance(data, list) else [data])
     else:
-        existing = []
-    existing.append(data)
+        existing = [existing] + ([data] if not isinstance(data, list) else data)
+    
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(existing, f, ensure_ascii=False, indent=2)

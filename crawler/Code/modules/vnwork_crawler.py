@@ -69,12 +69,12 @@ def get_info(url, driver):
 
     # === Thông tin cơ bản ===
     job_title = soup.find("h1", class_="sc-ab270149-0 hAejeW")
-    print("Job title: ", job_title)
     deadline = soup.find("span", class_="sc-ab270149-0 ePOHWr")
     salary = soup.find("span", class_="sc-ab270149-0 cVbwLK")
     location = soup.find("div", class_="sc-a137b890-1 joxJgK")
 
     job_title = job_title.text.strip() if job_title else "N/A"
+    print("Job title: ", job_title)
     deadline = deadline.text.strip() if deadline else "N/A"
     salary = salary.text.strip() if salary else "N/A"
     location = location.text.strip() if location else "N/A"
@@ -138,97 +138,96 @@ def get_info(url, driver):
 # 🧭 HÀM CHÍNH CRAWL
 # ==========================================================
 
-def scrape_jobs_by_skill(driver, skill_name, skill_url, max_pages=50):
-    """
-    Crawl tất cả job thuộc một skill cụ thể (VD: Java, React).
-    """
+def scrape_jobs_by_skill(driver, skill_name, skill_url, max_pages=10):
+    """Crawl tất cả job thuộc một skill, tự skip nếu trang lỗi liên tiếp."""
     jobs = []
     page = 1
+    fail_streak = 0
 
-    while True:
-        if page > max_pages:
-            print(f"[WARN] Reached max page limit ({max_pages}) for skill={skill_name}")
-            break
-
+    while page <= max_pages:
         print(f"[INFO] Scraping skill={skill_name}, page={page}")
-        driver.get(f"{skill_url}&page={page}")
-        time.sleep(1)
+        try:
+            driver.get(f"{skill_url}&page={page}")
+            time.sleep(1.5)
+            fail_streak = 0  # reset khi thành công
+        except Exception as e:
+            print(f"[WARN] Page {page} failed for {skill_name}: {e}")
+            fail_streak += 1
+            if fail_streak >= 3:
+                print(f"[WARN] ❌ Quá nhiều lỗi liên tiếp, dừng kỹ năng {skill_name}.")
+                break
+            page += 1
+            continue
 
         soup = BeautifulSoup(driver.page_source, "html.parser")
         job_containers = soup.find_all("div", class_="sc-iVDsrp frxvCT")
-
         if not job_containers:
+            print(f"[INFO] No more jobs found at page {page}")
             break
 
         for container in job_containers:
             a_tag = container.find("a", class_="img_job_card")
-            if a_tag:
-                url = a_tag.get("href")
-                if not url:
-                    continue
+            if not a_tag:
+                continue
+            url = a_tag.get("href")
+            if not url:
+                continue
 
-                full_url = "https://www.vietnamworks.com" + url
+            full_url = "https://www.vietnamworks.com" + url
+            try:
                 info = get_info(full_url, driver)
                 jobs.append(info)
+            except Exception as e:
+                print(f"[ERROR] Failed to crawl job at {full_url}: {e}")
+                continue
 
         page += 1
+        time.sleep(1.0 + (page % 3) * 0.5)
 
     return jobs
 
-
 def run_vnwork_crawler():
-    """
-    Chạy toàn bộ quy trình crawl VietnamWorks.
-    """
     driver = init_vnwork_driver()
 
     print("[INFO] Opening Vietnamworks...")
     driver.get(BASE_IT_VNWORK)
-    time.sleep(15)
+    time.sleep(10)
 
-    print("[DEBUG] URL:", driver.current_url)
-    print("[DEBUG] Title:", driver.title)
-    print("[DEBUG] PAGE LENGTH:", len(driver.page_source))
-
-    # Lưu trang debug để kiểm tra
-    debug_file = os.path.join(LOG_DAY_DIR, "vnworks_debug.html")
-    with open(debug_file, "w", encoding="utf-8") as f:
-        f.write(driver.page_source)
-
-    # Tìm danh sách skill
     soup = BeautifulSoup(driver.page_source, "html.parser")
     skills_div = soup.find("div", class_="skill-tag-details")
-
     if not skills_div:
-        print("[WARN] Không tìm thấy skill-tag-details (có thể web chặn bot).")
+        print("[ERROR] Không tìm thấy danh sách kỹ năng. Có thể bị chặn.")
         driver.quit()
         return
 
     skill_elements = skills_div.find_all("div", class_="tag-wrapper")
-    print(f"[INFO] Found {len(skill_elements)} skills.")
-
-    # Chuẩn bị lưu
-    skill_groups = []
     output_path = get_output_file(prefix="vnwork")
+    print(f"[INFO] Found {len(skill_elements)} skills, saving to {output_path}")
 
-    for skill_el in skill_elements:
+    for idx, skill_el in enumerate(skill_elements, 1):
         skill_name = skill_el.get_text(strip=True)
         skill_url = f"https://www.vietnamworks.com/viec-lam?q={skill_name.lower().replace(' ', '-')}"
 
-        print(f"[INFO] Found skill: {skill_name} ({skill_url})")
-        jobs = scrape_jobs_by_skill(driver, skill_name, skill_url)
-        skill_groups.append({"group": skill_name, "jobs": jobs})
-        
-        save_json({"group": skill_name, "jobs": jobs}, output_path)
-        # Ghi file tạm ngay sau mỗi skill
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(skill_groups, f, ensure_ascii=False, indent=4)
+        print(f"\n=== [{idx}/{len(skill_elements)}] Crawling {skill_name} ===")
 
-        print(f"[SAVE] Saved progress to {output_path}")
+        # 👉 Khởi tạo driver riêng cho từng kỹ năng
+        driver = init_vnwork_driver()
+        time.sleep(3)
 
-    driver.quit()
+        try:
+            jobs = scrape_jobs_by_skill(driver, skill_name, skill_url)
+            if jobs:
+                save_json([{"group": skill_name, "jobs": jobs}], output_path)
+                print(f"[SAVE] {len(jobs)} jobs saved for {skill_name}")
+            else:
+                print(f"[WARN] No jobs found for {skill_name}")
+        except Exception as e:
+            print(f"[ERROR] Skill {skill_name} failed: {e}")
+        finally:
+            driver.quit()
+            os.system("pkill -f chrome || true")  # 🧹 đảm bảo kill Chrome zombie
+            time.sleep(2)
     print(f"[DONE] ✅ Tất cả dữ liệu đã lưu vào {output_path}")
-
 
 # ==========================================================
 # 🏁 ENTRYPOINT

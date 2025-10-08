@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import InvalidSessionIdException
+from selenium.common.exceptions import WebDriverException
 import shutil
 # Import dùng chung
 from Code.core.driver_for_topcv import init_topcv_driver
@@ -66,6 +67,21 @@ def get_skills_info(driver):
 # ---------------------------
 # Crawl jobs 
 # ---------------------------
+def ensure_driver_alive(driver):
+    """
+    Kiểm tra driver còn hoạt động, nếu không thì khởi tạo mới.
+    """
+    try:
+        driver.execute_script("return 1")  # ping nhẹ
+        return driver
+    except Exception:
+        print("[WARN] 🚨 Driver mất kết nối, khởi động lại UC mới...")
+        try:
+            driver.quit()
+        except:
+            pass
+        time.sleep(2)
+        return init_topcv_driver(headless=True)
 def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
     jobs, seen = [], set()
     all_links = []
@@ -83,7 +99,15 @@ def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
         log_and_print(f"-- Trang {page or 1}: {url}", logger)
 
         try:
-            driver.get(url)
+            try:
+                driver.get(url)
+            except WebDriverException as e:
+                if "invalid session id" in str(e).lower():
+                    log_and_print("🚨 Mất session Chrome, tạo driver mới...", logger)
+                    driver = init_topcv_driver(headless=True)
+                    driver.get(url)
+                else:
+                    raise
             WebDriverWait(driver, 20).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.job-item-2 h3.title a[target='_blank']"))
             )
@@ -116,6 +140,7 @@ def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
     # Crawl từng job trên cùng 1 tab
     for i, link in enumerate(all_links[:target_count]):
         try:
+            driver = ensure_driver_alive(driver)
             driver.get(link)
             log_and_print(f"👉 Crawl job ({i+1}/{len(all_links)}): {link}")
 
@@ -208,10 +233,13 @@ def run_topcv_crawler():
         log_file = os.path.join(LOG_DIR, f"topcv_{datetime.now().strftime('%Y-%m-%d')}.log")
         logger = setup_logger("topcv_logger", log_file)
         for name, sid in skills:
-            log_and_print(f"\n=== Crawl nhóm {name} ===", logger)
-            jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
-            save_json({"group": name, "jobs": jobs}, output_file)
-            log_and_print(f"✅ Lưu nhóm {name}", logger)
+                log_and_print(f"\n=== Crawl nhóm {name} ===", logger)
+                jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
+                if jobs:
+                    save_json({"group": name, "jobs": jobs}, output_file)
+                    print(f"[SAVE] {len(jobs)} jobs saved for {name}")
+                else:
+                    print(f"[WARN] No jobs found for {name}")
     finally:
         driver.quit()
         # cleanup temp UC cache

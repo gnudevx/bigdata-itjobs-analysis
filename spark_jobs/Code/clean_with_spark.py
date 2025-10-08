@@ -194,11 +194,18 @@ def main():
             salary_raw = job.get('salary', '')
             salary_norm = normalize_salary(salary_raw)
 
+            exp_raw = job.get('experience', '')
+            exp_match = re.search(r'(\d+)', exp_raw)
+            exp_num = int(exp_match.group(1)) if exp_match else None
+
+            if exp_raw in ["Không yêu cầu"]:
+                exp_num = 0
+
             cleaned_job = {
                 'title': job.get('title'),
                 'link': job.get('link'),
                 'location': location_norm,
-                'experience': job.get('experience'),
+                'experience': exp_num,
                 'description': job.get('description'),
                 'requirements': req_clean,
                 'benefits': job.get('benefits'),

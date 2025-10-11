@@ -1,0 +1,6 @@
+các lệnh docker:
+- Copy từ docker về máy: 
+docker cp 642171a658c0d7d352b097bf6921d96e607e1b22e2fd3ab54113a181e291d098:/opt/spark_jobs/Output/cleaned_data.json D:\PJ_BDAS\bigdata-itjobs-analysis\spark_jobs\Output\
+
+docker cp 642171a658c0d7d352b097bf6921d96e607e1b22e2fd3ab54113a181e291d098:/home/hadoopducdung/cleaned_data.csv D:\PJ_BDAS\bigdata-itjobs-analysis\spark_jobs\Output\
+Successfully copied 5.4MB to D:\PJ_BDAS\bigdata-itjobs-analysis\spark_jobs\Output\

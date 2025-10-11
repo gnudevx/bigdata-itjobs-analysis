@@ -1,3 +1,5 @@
+# Cách chạy: docker -> spark-submit /opt/spark_jobs/clean_with_spark.py
+
 import json
 import re
 from datetime import datetime
@@ -9,7 +11,7 @@ import unicodedata
 INPUT_FILES = Path(r'/opt/Dataset/2025-10-08/merged_jobs_2025-10-08.json')
 
 # File output
-CLEANED_OUT = Path(r'/opt/spark_jobs/Output/cleaned_data.json')
+CLEANED_OUT = Path(r'/opt/Output/cleaned_data.json')
 
 # Model NER để trích SKILL
 NER_MODEL = r"/opt/spark_jobs/checkpoint"

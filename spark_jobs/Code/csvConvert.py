@@ -1,49 +1,68 @@
 # Cách chạy: docker -> spark-submit /opt/spark_jobs/csvConvert.py
 
+# Lưu ý: 
+# 1. file JSON đầu vào phải là file đã được làm sạch (cleaned_data.json)
+# 2. file CSV đầu ra sẽ được ghi vào /home/hadoopducdung/Output/cleaned_data.csv để Hive có thể đọc được
+
+import os, glob, shutil
 from pathlib import Path
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import explode, col
+from pyspark.sql.functions import explode, col, concat_ws
 
-# 1. Khởi tạo Spark session
+# Khởi tạo Spark session
 spark = SparkSession.builder \
     .appName("Convert JSON to CSV for Hive Table") \
+    .master("local[*]") \
     .getOrCreate()
 
-# 2. Đường dẫn file JSON đầu vào
-input_path = "hdfs:///user/hive/data/git_jobs_raw/cleaned_data.json"
-output_path = "hdfs:///user/hive/data/git_jobs_csv/cleaned_data_csv"
+# Đường dẫn file JSON đầu vào
+input_path = Path('/opt/Output/cleaned_data.json')
+output_path = Path('/home/hadoopducdung/Output/cleaned_data.csv')
 
-df = spark.read.option("multiline", True).json(input_path)
+df = spark.read.option("multiline", True).json("file://" + str(input_path))
 
-# 4. Làm phẳng mảng jobs
+# Làm phẳng mảng jobs
 df_flat = (
     df.withColumn("job", explode(col("jobs")))
       .select(
           col("group").alias("group"),
           col("job.title").alias("title"),
           col("job.link").alias("link"),
-          # dùng salary_raw thay vì salary
-          col("job.salary_normalized").alias("salary"),
           col("job.location").alias("location"),
-          col("job.experience").cast("string").alias("experience"),  # ép sang string cho Hive
+          col("job.experience").alias("experience"),  # ép sang string cho Hive
           col("job.description").alias("description"),
           col("job.requirements").alias("requirements"),
           col("job.benefits").alias("benefits"),
           col("job.work_location_detail").alias("work_location_detail"),
           col("job.working_time").alias("working_time"),
-          col("job.deadline").alias("deadline")
+          col("job.deadline").alias("deadline"),
+          col("job.salary_raw").alias("salary_raw"),
+          col("job.salary_normalized").alias("salary_normalized"),
+          col("job.currency_unit").alias("currency_unit"),
+          concat_ws(", ", col("job.skills")).alias("skills")          
       )
 )
 
-# 5. Ghi dữ liệu ra file CSV có header, để Hive LOAD dễ
-df_flat.write \
+# Ghi dữ liệu ra file CSV duy nhất
+output_path.parent.mkdir(parents=True, exist_ok=True)
+df_flat.coalesce(1).write \
     .option("header", True) \
+    .option("quoteAll", True) \
+    .option("escape", '"') \
     .option("encoding", "UTF-8") \
-    .option("bom", True) \
     .mode("overwrite") \
-    .csv(output_path)
+    .csv("file://" + str(output_path.parent))
 
-# 6. Kiểm tra schema
+# Đổi tên file part-xxxx.csv thành cleaned_data.csv
+
+part_file = glob.glob(str(output_path.parent / "part-*.csv"))[0]
+shutil.move(part_file, output_path)
+
+# Xóa folder tạm
+success_file = output_path.parent / "_SUCCESS"
+if success_file.exists():
+    success_file.unlink()
+
 df_flat.printSchema()
 print(f"✅ CSV file has been written to: {output_path}")
 

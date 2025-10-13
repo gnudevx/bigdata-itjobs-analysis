@@ -16,8 +16,8 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Đường dẫn file JSON đầu vào
-input_path = Path('/opt/Output/cleaned_data.json')
-output_path = Path('/home/hadoopducdung/Output/cleaned_data.csv')
+input_path = Path('/opt/Output_json/cleaned_data.json')
+output_path = Path('/opt/Output_csv/cleaned_data.csv')
 
 df = spark.read.option("multiline", True).json("file://" + str(input_path))
 

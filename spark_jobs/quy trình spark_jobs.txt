@@ -1,0 +1,6 @@
+# Mỗi bước chạy cần chạy song song câu lệnh docker (file txt) để lấy file về máy
+
+1. clean-with-spark
+2. csvConvert
+3. parquetConvert
+4. SparkQLs

@@ -5,11 +5,13 @@ LABEL maintainer="DOCUTEE <work.docutee@outlook.com>"
 # Prepare ssh
 RUN mkdir -p /run/sshd && echo "root:root" | chpasswd
 
-# Install base packages + Java
+# Install base packages + Java + Python + pip
 RUN apt-get update && \
     apt-get install -y wget ssh openssh-server dos2unix vim sudo telnet iputils-ping && \
     apt-get install -y openjdk-8-jdk openjdk-17-jdk && \
     apt-get install -y libc6 libzstd1 libncurses5 libtinfo5 && \
+    apt-get install -y python3 python3-pip && \
+    [ -f /usr/bin/pip ] || ln -s /usr/bin/pip3 /usr/bin/pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Setup Java alternatives (Java 17 default)
@@ -28,6 +30,8 @@ COPY spark-config/spark-4.0.1-bin-hadoop3.tgz /tmp/
 RUN tar -xzf /tmp/spark-4.0.1-bin-hadoop3.tgz -C /usr/local/ && \
     mv /usr/local/spark-4.0.1-bin-hadoop3 /usr/local/spark && \
     rm /tmp/spark-4.0.1-bin-hadoop3.tgz
+# Install Python libraries for Spark & data analysis 
+RUN pip install --no-cache-dir pyspark pandas numpy requests spacy pyvi
 
 # Set environment variables
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64

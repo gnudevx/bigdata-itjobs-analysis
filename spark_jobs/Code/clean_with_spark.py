@@ -33,7 +33,7 @@ def normalize_salary(salary_str: str):
     val = sum(values) / len(values)
     if 'usd' in s_clean or '$' in s_clean:
         multiplier = EXCHANGE_RATE
-    elif 'triệu' in s_clean:
+    elif 'triệu' or 'tr' in s_clean:
         multiplier = 1_000_000
     else:
         multiplier = 1

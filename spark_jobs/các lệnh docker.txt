@@ -1,7 +1,7 @@
 các lệnh docker:
 - Copy từ docker về máy: 
-docker cp 642171a658c0d7d352b097bf6921d96e607e1b22e2fd3ab54113a181e291d098(thay bằng containerid trên máy):/opt/spark_jobs/Output/cleaned_data.json D:\
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb(thay bằng containerid trên máy):/opt/Output/cleaned_data.json D:\
 
-docker cp 642171a658c0d7d352b097bf6921d96e607e1b22e2fd3ab54113a181e291d098:/home/hadoopducdung/Output/cleaned_data.csv D:\
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/home/hadoopducdung/Output/cleaned_data.csv D:\
 
 docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/home/hadoopducdung/Output/cleaned_data.parquet D:\

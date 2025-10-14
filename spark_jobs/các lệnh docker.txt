@@ -5,3 +5,14 @@ docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb(thay 
 docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/home/hadoopducdung/Output/cleaned_data.csv D:\
 
 docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/home/hadoopducdung/Output/cleaned_data.parquet D:\
+
+SparkQL:
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/opt/Output_sparkQL/job_count_by_location.csv D:\
+
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/opt/Output_sparkQL/job_deadline_before.csv D:\
+
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/opt/Output_sparkQL/average_city_salary.csv D:\
+
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/opt/Output_sparkQL/avg_salary_by_skill.csv D:\
+
+docker cp c5b27559d8b01160588b78c83956f1e4f434dbbe23438631b5aa7a841a0f2edb:/opt/Output_sparkQL/job_count_by_experience.csv D:\

@@ -27,6 +27,7 @@ services:
       - hadoop-logs:/home/hadoopducdung/hadoop/logs
       - ../spark_jobs/Code:/opt/spark_jobs
       - ../crawler/Dataset:/opt/Dataset
+      - ../spark_jobs/Code:/opt/airflow/spark_jobs/Code
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave:
     build:

@@ -19,3 +19,6 @@ crawler/Code/config/__pycache__/
 crawler/Logs/
 crawler/chrome-profile-topcv
 crawler/chrome-profile-topcv-*
+
+airrow_dags/.env
+airflow_dags/spark-4.0.1-bin-hadoop3.tgz

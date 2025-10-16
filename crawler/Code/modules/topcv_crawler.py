@@ -12,7 +12,9 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import InvalidSessionIdException
 from selenium.common.exceptions import WebDriverException
 import shutil
-# Import dùng chung
+# Import dùng chung\
+import sys, os
+sys.path.append('/opt/airflow/crawler')
 from Code.core.driver_for_topcv import init_topcv_driver
 from Code.core.utils import setup_logger, log_and_print, human_delay, save_json
 from Code.config.settings import get_output_file, BASE_IT_TOPCV, TARGET_PER_GROUP, LOG_DIR
@@ -226,23 +228,34 @@ def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
 # Main function for airflow DAG
 # ---------------------------
 def run_topcv_crawler():
+    driver = None  # <--- đảm bảo biến tồn tại
     try:
         driver = init_topcv_driver(headless=True)
         skills = get_skills_info(driver)
         output_file = get_output_file("topcv")
         log_file = os.path.join(LOG_DIR, f"topcv_{datetime.now().strftime('%Y-%m-%d')}.log")
         logger = setup_logger("topcv_logger", log_file)
+
         for name, sid in skills:
-                log_and_print(f"\n=== Crawl nhóm {name} ===", logger)
-                jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
-                if jobs:
-                    save_json({"group": name, "jobs": jobs}, output_file)
-                    print(f"[SAVE] {len(jobs)} jobs saved for {name}")
-                else:
-                    print(f"[WARN] No jobs found for {name}")
+            log_and_print(f"\n=== Crawl nhóm {name} ===", logger)
+            jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
+            if jobs:
+                save_json({"group": name, "jobs": jobs}, output_file)
+                print(f"[SAVE] {len(jobs)} jobs saved for {name}")
+            else:
+                print(f"[WARN] No jobs found for {name}")
+
+    except Exception as e:
+        log_and_print(f"❌ Lỗi tổng trong crawler: {e}", logger)
     finally:
-        driver.quit()
-        # cleanup temp UC cache
-        shutil.rmtree(os.environ.get("UDC_DATA_DIR", ""), ignore_errors=True)
+        # ✅ Chỉ quit nếu driver đã được tạo
+        if driver:
+            try:
+                driver.quit()
+            except Exception:
+                pass
+        # ✅ Cleanup cache UC
+        shutil.rmtree(os.path.expanduser("~/.local/share/undetected_chromedriver"), ignore_errors=True)
+
 if __name__ == "__main__":
     run_topcv_crawler()

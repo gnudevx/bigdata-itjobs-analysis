@@ -5,6 +5,7 @@ import time
 import random
 import logging
 from datetime import datetime
+from hdfs import InsecureClient
 # --- Logging setup ---
 import logging
 import os
@@ -45,23 +46,36 @@ def log_and_print(msg, logger=None):
 def human_delay(min_sec=1, max_sec=3):
     time.sleep(random.uniform(min_sec, max_sec))
 
-def save_json(data, filepath):
-    """Ghi thêm dữ liệu vào JSON (append) mà không ghi đè."""
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+# def save_json(data, filepath):
+#     """Ghi thêm dữ liệu vào JSON (append) mà không ghi đè."""
+#     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     
-    existing = []
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                existing = json.load(f)
-        except Exception:
-            existing = []
+#     existing = []
+#     if os.path.exists(filepath):
+#         try:
+#             with open(filepath, "r", encoding="utf-8") as f:
+#                 existing = json.load(f)
+#         except Exception:
+#             existing = []
     
-    # Gộp dữ liệu mới vào
-    if isinstance(existing, list):
-        existing.extend(data if isinstance(data, list) else [data])
-    else:
-        existing = [existing] + ([data] if not isinstance(data, list) else data)
+#     # Gộp dữ liệu mới vào
+#     if isinstance(existing, list):
+#         existing.extend(data if isinstance(data, list) else [data])
+#     else:
+#         existing = [existing] + ([data] if not isinstance(data, list) else data)
     
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(existing, f, ensure_ascii=False, indent=2)
+#     with open(filepath, "w", encoding="utf-8") as f:
+#         json.dump(existing, f, ensure_ascii=False, indent=2)
+        
+        # Kết nối tới HDFS qua WebHDFS
+client = InsecureClient('http://hadoop-master:9870', user='hadoopducdung')
+
+def save_json(data, hdfs_path):
+    """Ghi dữ liệu JSON trực tiếp lên HDFS."""
+    dir_path = os.path.dirname(hdfs_path)
+    if not client.status(dir_path, strict=False):
+        client.makedirs(dir_path)
+    
+    with client.write(hdfs_path, encoding='utf-8', overwrite=True) as writer:
+        json.dump(data, writer, ensure_ascii=False, indent=2)
+    print(f"✅ Ghi dữ liệu lên HDFS thành công: {hdfs_path}")

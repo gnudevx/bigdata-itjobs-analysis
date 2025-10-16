@@ -1,0 +1,6 @@
+README.md
+setup.py
+itjobs_analysis.egg-info/PKG-INFO
+itjobs_analysis.egg-info/SOURCES.txt
+itjobs_analysis.egg-info/dependency_links.txt
+itjobs_analysis.egg-info/top_level.txt

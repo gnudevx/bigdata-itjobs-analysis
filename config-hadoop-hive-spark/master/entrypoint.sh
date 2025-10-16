@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-ROLE=${ROLE:-datanode}   # set ROLE=master cho master service trong compose
+ROLE=${ROLE:-datanode}   # ROLE=master cho master service trong compose
 HADOOP_HOME=/home/hadoopducdung/hadoop
+SPARK_HOME=/usr/local/spark
 DATA_ROOT=/home/hadoopducdung/hadoop/hadoop_data
 NN_DIR=${DATA_ROOT}/hdfs/namenode
 DN_DIR=${DATA_ROOT}/hdfs/datanode
@@ -11,15 +12,17 @@ DN_DIR=${DATA_ROOT}/hdfs/datanode
 mkdir -p "${NN_DIR}" "${DN_DIR}" "${HADOOP_HOME}/logs"
 chown -R hadoopducdung:hadoopducdung "${DATA_ROOT}" "${HADOOP_HOME}/logs" || true
 
-# 🔹 Dọn dẹp tiến trình cũ (nếu còn) + xóa pid file
-echo "=> Cleaning up old Hadoop processes and pid files..."
+# 🔹 Dọn dẹp tiến trình cũ (nếu còn)
+echo "=> Cleaning up old Hadoop/Spark processes and pid files..."
 pkill -f 'DataNode' || true
 pkill -f 'NodeManager' || true
 pkill -f 'NameNode' || true
 pkill -f 'ResourceManager' || true
+pkill -f 'Master' || true
+pkill -f 'Worker' || true
 rm -f /tmp/hadoop-*.pid
 
-# Format only on master and only if not formatted yet
+# 🔹 Format HDFS nếu là master (chỉ 1 lần đầu)
 if [ "$ROLE" = "master" ]; then
   if [ ! -f "${NN_DIR}/current/VERSION" ]; then
     echo "=> Formatting NameNode (first-time only)..."
@@ -29,19 +32,35 @@ if [ "$ROLE" = "master" ]; then
   fi
 fi
 
-# start ssh (so other nodes can connect)
+# 🔹 Start SSH
 service ssh start
 
-# start Hadoop daemons according to role
+# 🔹 Start Hadoop daemons theo role
 if [ "$ROLE" = "master" ]; then
   echo "=> Starting HDFS and YARN on master..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-dfs.sh"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/start-yarn.sh"
-else
+  mkdir -p "${SPARK_HOME}/logs"
+  mkdir -p "${SPARK_HOME}/work"
+  chmod -R 777 "${SPARK_HOME}/logs"
+  chmod -R 777 "${SPARK_HOME}/work"
+  # 🔹 Start Spark Master
+  echo "=> Starting Spark Master..."
+  su - hadoopducdung -c "${SPARK_HOME}/sbin/start-master.sh"
+
+  # 🔹 Start Spark Worker trên chính master (nếu muốn)
+  echo "=> Starting Spark Worker on master..."
+  su - hadoopducdung -c "${SPARK_HOME}/sbin/start-worker.sh spark://ducdung-master:7077"
+
+elif [ "$ROLE" = "datanode" ]; then
   echo "=> Starting datanode and nodemanager on worker..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/hadoop-daemon.sh start datanode"
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/yarn-daemon.sh start nodemanager"
+
+  # 🔹 Start Spark Worker trên node phụ (nếu muốn)
+  echo "=> Starting Spark Worker on slave..."
+  su - hadoopducdung -c "${SPARK_HOME}/sbin/start-worker.sh spark://ducdung-master:7077"
 fi
 
-# keep container alive
+# 🔹 Giữ container sống
 tail -f /dev/null

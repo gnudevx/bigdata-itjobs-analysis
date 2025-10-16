@@ -1,11 +1,37 @@
-undetected-chromedriver
-selenium
-selenium-stealth
-beautifulsoup4
-lxml
-requests
-fake-useragent
-pandas
-numpy
-python-dateutil
-tqdm
+# --- Web Crawling ---
+undetected-chromedriver==3.5.5
+selenium==4.23.1
+selenium-stealth==1.0.6
+beautifulsoup4==4.12.3
+lxml==5.2.1
+requests==2.32.3
+fake-useragent==2.2.0
+tqdm==4.66.4
+
+# --- Data Processing ---
+pandas==2.2.2
+numpy==1.26.4
+python-dateutil==2.9.0.post0
+six==1.16.0
+
+# --- HDFS ---
+hdfs==2.7.3
+
+# --- Machine Learning & NLP (optional heavy libs) ---
+scikit-learn==1.5.2
+joblib==1.4.2
+spacy==3.8.7
+pyvi==0.1.1
+
+# --- Visualization (optional if not training models) ---
+matplotlib==3.9.2
+seaborn==0.13.2
+plotly==5.24.0
+
+# --- Big Data ---
+pyspark==3.5.1
+
+# --- Airflow Provider ---
+apache-airflow-providers-apache-spark
+
+

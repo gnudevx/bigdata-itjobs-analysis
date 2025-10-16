@@ -3,8 +3,8 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 import sys, os
-os.environ['PYSPARK_PYTHON'] = '/home/airflow/.local/bin/python3'
-os.environ['PYSPARK_DRIVER_PYTHON'] = '/home/airflow/.local/bin/python3'
+# os.environ['PYSPARK_PYTHON'] = '/home/airflow/.local/bin/python3'
+# os.environ['PYSPARK_DRIVER_PYTHON'] = '/home/airflow/.local/bin/python3'
 sys.path.extend([
     '/opt/airflow/crawler',
     '/opt/airflow/spark_jobs',
@@ -31,7 +31,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='crawler_data_itjobs_with_ml1',
+    dag_id='data_itjobs_pipeline1',
     default_args=default_args,
     description='Crawl + Clean + ML pipeline for IT jobs',
     schedule=timedelta(days=3),
@@ -61,11 +61,10 @@ with DAG(
         conn_id='spark_no_master',
         verbose=True,
         conf={
-            "spark.master": "spark://hadoop-master:7077",
             "spark.driver.bindAddress": "0.0.0.0",
-            "spark.submit.deployMode": "client",
-            "spark.pyspark.python": "/usr/bin/python3",
-            "spark.pyspark.driver.python": "/usr/bin/python3"
+            "spark.hadoop.yarn.resourcemanager.address": "ducdung-master:8032",
+            # "spark.pyspark.python": "/usr/bin/python3",
+            # "spark.pyspark.driver.python": "/usr/bin/python3"
         }
     )
 

@@ -54,6 +54,7 @@ x-airflow-common:
   environment:
     # AIRFLOW__CORE__EXECUTOR: LocalExecutor
     &airflow-common-env
+    AIRFLOW__WEBSERVER__SECRET_KEY: airflowsecret123
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW_CONN_SPARK_DEFAULT: 'spark://?master=spark://hadoop-master:7077'
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow

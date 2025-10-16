@@ -25,9 +25,8 @@ services:
     volumes:
       - ./hadoop_data/namenode:/home/hadoopducdung/hadoop/hadoop_data/hdfs/namenode
       - hadoop-logs:/home/hadoopducdung/hadoop/logs
-      - ../spark_jobs/Code:/opt/spark_jobs
+      - ../spark_jobs/:/opt/airflow/spark_jobs
       - ../crawler/Dataset:/opt/Dataset
-      - ../spark_jobs/Code:/opt/airflow/spark_jobs/Code
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave:
     build:
@@ -38,6 +37,7 @@ services:
     depends_on:
       - hadoop-base
     volumes:
+      - ../spark_jobs/:/opt/airflow/spark_jobs
       - ./hadoop_data/datanode1:/home/hadoopducdung/hadoop/hadoop_data/hdfs/datanode
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   hadoop-slave2:
@@ -49,6 +49,7 @@ services:
     depends_on:
       - hadoop-base
     volumes:
+      - ../spark_jobs/:/opt/airflow/spark_jobs
       - ./hadoop_data/datanode2:/home/hadoopducdung/hadoop/hadoop_data/hdfs/datanode
     entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
   metastore-db:

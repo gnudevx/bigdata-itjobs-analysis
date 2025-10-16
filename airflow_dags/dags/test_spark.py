@@ -8,7 +8,6 @@ with DAG(
     schedule_interval=None,
     catchup=False,
 ) as dag:
-
     SparkSubmitOperator(
         task_id='spark_test',
         application='/opt/airflow/spark_jobs/test.py',

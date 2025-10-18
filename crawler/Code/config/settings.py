@@ -5,7 +5,7 @@ from datetime import datetime
 BASE_IT_TOPCV = "https://www.topcv.vn/viec-lam-it"
 BASE_IT_VNWORK = "https://www.vietnamworks.com/viec-lam?q=it"
 
-TARGET_PER_GROUP = 2
+TARGET_PER_GROUP = 500
 
 # Base folder
 BASE_DIR = "/opt/airflow/crawler"
@@ -25,10 +25,6 @@ os.makedirs(LOG_DAY_DIR, exist_ok=True)
 #     /opt/airflow/crawler/Dataset/2025-10-06/vnwork_2025-10-06.json
 #     """
 #     return os.path.join(DATASET_DAY_DIR, f"{prefix}_{TODAY}.json")
-def get_output_file(prefix="vnwork"):
-    today = datetime.now().strftime("%Y-%m-%d")
-    return f"/user/hadoopducdung/airflow/dataset/{today}/{prefix}_{today}.json"
-
 # Chrome config
 HEADLESS = True
 CHROMEDRIVER_PATH = "/usr/local/bin/chromedriver"

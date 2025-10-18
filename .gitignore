@@ -22,3 +22,6 @@ crawler/chrome-profile-topcv-*
 
 airrow_dags/.env
 airflow_dags/spark-4.0.1-bin-hadoop3.tgz
+
+ml_jobs/Code/__pycache__/
+ml_jobs/Code/.vscode/

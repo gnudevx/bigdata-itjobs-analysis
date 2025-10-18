@@ -51,7 +51,17 @@ if [ "$ROLE" = "master" ]; then
   # 🔹 Start Spark Worker trên chính master (nếu muốn)
   echo "=> Starting Spark Worker on master..."
   su - hadoopducdung -c "${SPARK_HOME}/sbin/start-worker.sh spark://ducdung-master:7077"
-
+  # ✅🔹 Tự động tạo HDFS thư mục airflow (chỉ trên master)
+  echo "=> Checking HDFS directory /user/hadoopducdung/airflow ..."
+  su - hadoopducdung -c "
+    ${HADOOP_HOME}/bin/hdfs dfs -test -d /user/hadoopducdung/airflow || (
+      echo '📁 Creating /user/hadoopducdung/airflow in HDFS...';
+      ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hadoopducdung/airflow &&
+      ${HADOOP_HOME}/bin/hdfs dfs -chown -R hadoopducdung:supergroup /user/hadoopducdung/airflow &&
+      ${HADOOP_HOME}/bin/hdfs dfs -chmod 775 /user/hadoopducdung/airflow
+    )
+  "
+  echo "✅ HDFS airflow directory ready."
 elif [ "$ROLE" = "datanode" ]; then
   echo "=> Starting datanode and nodemanager on worker..."
   su - hadoopducdung -c "${HADOOP_HOME}/sbin/hadoop-daemon.sh start datanode"

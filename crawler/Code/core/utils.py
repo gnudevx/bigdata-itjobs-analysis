@@ -70,12 +70,59 @@ def human_delay(min_sec=1, max_sec=3):
         # Kết nối tới HDFS qua WebHDFS
 client = InsecureClient('http://hadoop-master:9870', user='hadoopducdung')
 
-def save_json(data, hdfs_path):
-    """Ghi dữ liệu JSON trực tiếp lên HDFS."""
-    dir_path = os.path.dirname(hdfs_path)
-    if not client.status(dir_path, strict=False):
-        client.makedirs(dir_path)
-    
-    with client.write(hdfs_path, encoding='utf-8', overwrite=True) as writer:
+
+def get_base_dir():
+    """Thư mục gốc trên HDFS theo ngày crawl"""
+    today = datetime.now().strftime("%Y-%m-%d")
+    return f"/user/hadoopducdung/airflow/dataset/{today}/vnwork"
+
+def get_output_file(prefix="vnwork"):
+    today = datetime.now().strftime("%Y-%m-%d")
+    return f"/user/hadoopducdung/airflow/dataset/{today}/{prefix}_{today}.json"
+
+# --- 1️⃣ Hàm ghi file tạm ---
+def save_temp_json(data, base_dir, index):
+    """Lưu từng batch nhỏ, ví dụ: .../tmp/part_1.json"""
+    temp_dir = os.path.join(base_dir, "tmp")
+    if not client.status(temp_dir, strict=False):
+        client.makedirs(temp_dir)
+
+    file_path = os.path.join(temp_dir, f"part_{index}.json")
+    with client.write(file_path, encoding="utf-8", overwrite=True) as writer:
         json.dump(data, writer, ensure_ascii=False, indent=2)
-    print(f"✅ Ghi dữ liệu lên HDFS thành công: {hdfs_path}")
+    print(f"✅ Ghi file tạm: {file_path}")
+    return file_path
+
+
+# --- 2️⃣ Hàm merge các file nhỏ lại thành 1 file tổng ---
+def merge_temp_files(base_dir, output_path):
+    temp_dir = os.path.join(base_dir, "tmp")
+    if not client.status(temp_dir, strict=False):
+        print("[WARN] Không có thư mục tạm để merge.")
+        return
+
+    files = sorted(client.list(temp_dir))
+    all_data = []
+
+    for f in files:
+        file_path = os.path.join(temp_dir, f)
+        with client.read(file_path, encoding="utf-8") as reader:
+            data = json.load(reader)
+            if isinstance(data, list):
+                all_data.extend(data)
+            else:
+                all_data.append(data)
+
+    with client.write(output_path, encoding="utf-8", overwrite=True) as writer:
+        json.dump(all_data, writer, ensure_ascii=False, indent=2)
+
+    print(f"✅ Merge {len(files)} file → {output_path}")
+    return output_path
+
+
+# --- 3️⃣ Xóa thư mục tạm sau khi merge ---
+def cleanup_temp(base_dir):
+    temp_dir = os.path.join(base_dir, "tmp")
+    if client.status(temp_dir, strict=False):
+        client.delete(temp_dir, recursive=True)
+        print(f"🧹 Đã xóa thư mục tạm: {temp_dir}")

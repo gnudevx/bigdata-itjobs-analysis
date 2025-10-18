@@ -30,7 +30,9 @@ ENV PATH=$PATH:$HIVE_HOME/bin
 # Tạo thư mục warehouse
 RUN mkdir -p /user/hive/warehouse && chmod -R 777 /user/hive/warehouse
 
-
+RUN apt-get update && apt-get install -y python3-pip && \
+    pip install pyspark hdfs pandas pyarrow findspark
+RUN pip install spacy==3.8.7
 USER root
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

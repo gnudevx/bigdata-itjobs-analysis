@@ -1,0 +1,21 @@
+# ====== Base paths ======
+data_root: "/opt/airflow/ml_jobs/data"
+model_root: "/opt/airflow/ml_jobs/model_store"
+log_root: "/opt/airflow/ml_jobs/logs"
+
+# ====== Subfolders ======
+folders:
+  raw: "raw"
+  processed: "processed"
+  prepared: "prepared"
+  latest_model: "latest"
+
+# ====== Default settings ======
+defaults:
+  encoding: "utf-8"
+  date_format: "%Y-%m-%d"
+# HDFS settings
+hdfs:
+  url: "http://hadoop-master:9870"
+  user: "hadoopducdung"
+  input_root: "/user/hadoopducdung/airflow/Output"

@@ -16,8 +16,8 @@ import shutil
 import sys, os
 sys.path.append('/opt/airflow/crawler')
 from Code.core.driver_for_topcv import init_topcv_driver
-from Code.core.utils import setup_logger, log_and_print, human_delay, save_json
-from Code.config.settings import get_output_file, BASE_IT_TOPCV, TARGET_PER_GROUP, LOG_DIR
+from Code.core.utils import setup_logger, log_and_print, human_delay, get_base_dir, get_output_file, save_temp_json, merge_temp_files, cleanup_temp
+from Code.config.settings import  BASE_IT_TOPCV, TARGET_PER_GROUP, LOG_DIR
 
 logger = setup_logger("topcv")
 
@@ -89,7 +89,7 @@ def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
     all_links = []
     empty_pages = 0
 
-    for page in [""] + list(range(2, 11)):
+    for page in [""] + list(range(2, 20)):
         if sid == "other":
             url = f"{BASE_IT_TOPCV}?skill_id=&skill_id_other=other"
             if page != "":
@@ -228,33 +228,56 @@ def scrape_jobs_on_current_filter_single_tab(driver, sid, target_count=50):
 # Main function for airflow DAG
 # ---------------------------
 def run_topcv_crawler():
-    driver = None  # <--- đảm bảo biến tồn tại
+    driver = None
     try:
+        # --- Init ---
         driver = init_topcv_driver(headless=True)
         skills = get_skills_info(driver)
+
+        base_dir = get_base_dir()
         output_file = get_output_file("topcv")
         log_file = os.path.join(LOG_DIR, f"topcv_{datetime.now().strftime('%Y-%m-%d')}.log")
         logger = setup_logger("topcv_logger", log_file)
 
-        for name, sid in skills:
-            log_and_print(f"\n=== Crawl nhóm {name} ===", logger)
-            jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
+        log_and_print(f"[INFO] 🕷️ Tổng số kỹ năng: {len(skills)}", logger)
+        print(f"[SAVE PATH] {output_file}")
+
+        # --- Crawl từng nhóm ---
+        for idx, (name, sid) in enumerate(skills, 1):
+            log_and_print(f"\n=== [{idx}/{len(skills)}] Crawl nhóm {name} ===", logger)
+            jobs = []
+
+            try:
+                jobs = scrape_jobs_on_current_filter_single_tab(driver, sid, TARGET_PER_GROUP)
+            except Exception as e:
+                log_and_print(f"[ERROR] Lỗi khi crawl nhóm {name}: {e}", logger)
+
+            # ✅ Lưu tạm từng nhóm (kể cả rỗng để tracking)
+            save_temp_json([{"group": name, "jobs": jobs}], base_dir, idx)
+
             if jobs:
-                save_json({"group": name, "jobs": jobs}, output_file)
-                print(f"[SAVE] {len(jobs)} jobs saved for {name}")
+                log_and_print(f"[SAVE] ✅ {len(jobs)} jobs saved for {name}", logger)
             else:
-                print(f"[WARN] No jobs found for {name}")
+                log_and_print(f"[WARN] ⚠️ No jobs found for {name}", logger)
+
+            human_delay(2, 1)
+
+        # --- Merge & Cleanup ---
+        merge_temp_files(base_dir, output_file)
+        cleanup_temp(base_dir)
+        log_and_print(f"[DONE] ✅ Dữ liệu TopCV lưu tại: {output_file}", logger)
 
     except Exception as e:
         log_and_print(f"❌ Lỗi tổng trong crawler: {e}", logger)
+
     finally:
-        # ✅ Chỉ quit nếu driver đã được tạo
+        # ✅ Đảm bảo driver đóng gọn gàng
         if driver:
             try:
                 driver.quit()
             except Exception:
                 pass
-        # ✅ Cleanup cache UC
+        # ✅ Cleanup cache của undetected-chromedriver
         shutil.rmtree(os.path.expanduser("~/.local/share/undetected_chromedriver"), ignore_errors=True)
 
 if __name__ == "__main__":

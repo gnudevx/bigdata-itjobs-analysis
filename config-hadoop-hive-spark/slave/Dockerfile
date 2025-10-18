@@ -23,6 +23,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh && dos2unix /usr/local/bin/entrypoint.
 
 RUN apt-get update && apt-get install -y python3-pip && \
     pip install pyspark hdfs pandas pyarrow findspark
+RUN pip install spacy==3.8.7
 
 
 USER root

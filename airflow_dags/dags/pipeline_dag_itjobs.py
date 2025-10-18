@@ -30,10 +30,10 @@ default_args = {
     'retry_delay': timedelta(minutes=10),
 }
 with DAG(
-    dag_id='data_itjobs_pipeline1',
+    dag_id='data_pipeline_v0',
     default_args=default_args,
     description='Crawl + Clean + ML pipeline for IT jobs',
-    schedule=timedelta(days=3),
+    schedule=timedelta(days=2),
     start_date=datetime(2025, 10, 1),
     catchup=False,
     tags=['crawler', 'spark', 'ml'],
@@ -105,6 +105,6 @@ with DAG(
     )
 
     # === DAG dependencies ===
-    [crawl_topcv_task >> crawl_vnwork_task] >> merge_task >> clean_task \
+    [ crawl_vnwork_task >> crawl_topcv_task] >> merge_task >> clean_task \
     >> clean_skills_task >> preprocess_task >> train_task \
     >> evaluate_task >> incremental_train_task >> visualize_task

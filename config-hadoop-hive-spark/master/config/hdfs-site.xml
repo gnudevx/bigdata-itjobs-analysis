@@ -36,5 +36,8 @@ limitations under the License. See accompanying LICENSE file.
 
 		<value>/home/hadoopducdung/hadoop/hadoop_data/hdfs/datanode</value>
 	</property>
-
+	<property>
+		<name>dfs.webhdfs.enabled</name>
+		<value>true</value>
+	</property>
 </configuration>

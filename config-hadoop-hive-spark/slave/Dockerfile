@@ -21,6 +21,10 @@ RUN chmod +x /usr/local/bin/entrypoint.sh && dos2unix /usr/local/bin/entrypoint.
 # Format HDFS
 # USER hadoopducdung
 
+RUN apt-get update && apt-get install -y python3-pip && \
+    pip install pyspark hdfs pandas pyarrow findspark
+RUN pip install spacy==3.8.7
+
 
 USER root
 # Start SSH and Hadoop services at runtime

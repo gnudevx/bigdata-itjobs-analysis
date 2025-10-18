@@ -1,38 +1,39 @@
 import os
 import time
 import json
+import random
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from selenium_stealth import stealth
+import sys
 
-# Import nội bộ
-from Code.core.utils import save_json
+sys.path.append('/opt/airflow/crawler')
+from Code.core.utils import save_temp_json, merge_temp_files, cleanup_temp, get_output_file, get_base_dir
 from Code.core.driver_for_vnwork import init_vnwork_driver
-from Code.config.settings import get_output_file, BASE_IT_VNWORK, LOG_DAY_DIR
+from Code.config.settings import BASE_IT_VNWORK
 
 
-# ==========================================================
-# 🧩 HÀM PHỤ TRỢ
-# ==========================================================
+def human_delay(base=1.0, variance=0.5):
+    time.sleep(base + random.random() * variance)
+
 
 def parse_deadline(deadline_text: str, crawl_date=None):
-    """
-    Chuyển đổi chuỗi thời gian như 'Hết hạn trong 3 ngày' thành ngày cụ thể.
-    """
     if crawl_date is None:
         crawl_date = datetime.today()
+    if not deadline_text:
+        return "N/A"
 
     text = deadline_text.lower().strip()
-
     if "hết hạn trong" in text:
-        # Ví dụ: "Hết hạn trong 1 tháng", "Hết hạn trong 5 ngày"
         parts = text.replace("hết hạn trong", "").strip().split()
         if len(parts) >= 2:
-            num = int(parts[0])
+            try:
+                num = int(parts[0])
+            except ValueError:
+                return deadline_text
             unit = parts[1]
-
             if "ngày" in unit:
                 expire_date = crawl_date + timedelta(days=num)
             elif "tuần" in unit:
@@ -40,197 +41,199 @@ def parse_deadline(deadline_text: str, crawl_date=None):
             elif "tháng" in unit:
                 expire_date = crawl_date + relativedelta(months=num)
             else:
-                return deadline_text  # Không parse được
-
+                return deadline_text
             return f"Hạn nộp hồ sơ: {expire_date.strftime('%d/%m/%Y')}"
-
-    # Nếu text đã là ngày cụ thể sẵn rồi
     return deadline_text
 
 
 def get_info(url, driver):
-    """
-    Lấy thông tin chi tiết cho 1 job cụ thể.
-    """
-    driver.get(url)
-    time.sleep(1)
-
-    # Scroll xuống cuối trang để load đầy đủ nội dung
-    last_height = driver.execute_script("return document.body.scrollHeight")
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(0.5)
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        if new_height == last_height:
-            break
-        last_height = new_height
+    """Lấy chi tiết job cụ thể, bỏ qua nếu lỗi."""
+    try:
+        driver.set_page_load_timeout(60)
+        driver.get(url)
+        human_delay(1, 0.5)
+    except Exception as e:
+        print(f"[WARN] Không mở được job: {url} ({e})")
+        return None
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
-    # === Thông tin cơ bản ===
-    job_title = soup.find("h1", class_="sc-ab270149-0 hAejeW")
-    deadline = soup.find("span", class_="sc-ab270149-0 ePOHWr")
-    salary = soup.find("span", class_="sc-ab270149-0 cVbwLK")
-    location = soup.find("div", class_="sc-a137b890-1 joxJgK")
+    def safe_text(selector, cls):
+        el = soup.find(selector, class_=cls)
+        return el.text.strip() if el else "N/A"
 
-    job_title = job_title.text.strip() if job_title else "N/A"
-    print("Job title: ", job_title)
-    deadline = deadline.text.strip() if deadline else "N/A"
-    salary = salary.text.strip() if salary else "N/A"
-    location = location.text.strip() if location else "N/A"
+    try:
+        job_title = safe_text("h1", "sc-ab270149-0 hAejeW")
+        if job_title == "N/A":
+            raise Exception("Không lấy được tiêu đề job")
+        print(f"🔹 Job: {job_title}")
 
-    # Chuẩn hóa deadline -> ngày cụ thể
-    deadline = parse_deadline(deadline, crawl_date=datetime.today())
+        deadline = parse_deadline(safe_text("span", "sc-ab270149-0 ePOHWr"))
+        salary = safe_text("span", "sc-ab270149-0 cVbwLK")
+        location = safe_text("div", "sc-a137b890-1 joxJgK")
 
-    # === Mô tả & Yêu cầu ===
-    job_description, job_requirement = "", ""
-    detail_blocks = soup.find_all("div", class_="sc-1671001a-3 hmvhgA")
+        job_description, job_requirement = "", ""
+        for block in soup.find_all("div", class_="sc-1671001a-3 hmvhgA"):
+            for section in block.find_all("div", class_="sc-1671001a-4 gDSEwb"):
+                heading = section.find("h2", class_="sc-1671001a-5 cjuZti")
+                content_div = section.find("div", class_="sc-1671001a-6 dVvinc")
 
-    for block in detail_blocks:
-        headings = block.find_all("h2", class_="sc-1671001a-5 cjuZti")
-        for heading in headings:
-            heading_text = heading.get_text(strip=True)
-            next_div = heading.find_next_sibling("div")
+                if not heading or not content_div:
+                    continue
 
-            if next_div:
-                clean_text = next_div.get_text(separator="\n").strip()
-                if "Mô tả công việc" in heading_text:
-                    job_description = clean_text
-                elif "Yêu cầu công việc" in heading_text:
-                    job_requirement = clean_text
+                title = heading.get_text(strip=True).lower()
+                content = content_div.get_text(separator="\n").strip()
 
-    # === Phúc lợi ===
-    benefits = soup.find_all("div", class_="sc-c683181c-2 fGxLZh")
-    benefit = "".join([f"- {b.text.strip()}\n" for b in benefits])
+                if "mô tả" in title:
+                    job_description = content
+                elif "yêu cầu" in title:
+                    job_requirement = content
 
-    # === Thông tin thêm ===
-    experience_value, work_day_value = "", ""
-    info_blocks = soup.find_all("div", class_="sc-7bf5461f-0 dHvFzj")
+        benefits = soup.find_all("div", class_="sc-c683181c-2 fGxLZh")
+        benefit = "\n".join([f"- {b.text.strip()}" for b in benefits])
 
-    for block in info_blocks:
-        labels = block.find_all("label")
-        for label in labels:
-            label_text = label.get_text(strip=True)
-            next_p = label.find_next_sibling("p")
+        exp, workday = "", ""
+        for block in soup.find_all("div", class_="sc-7bf5461f-0 dHvFzj"):
+            label = block.find("label")
+            value = block.find("p")
+            if not label or not value:
+                continue
+            label_text = label.text.strip().upper()
+            if "KINH NGHIỆM" in label_text:
+                exp = value.text.strip()
+            elif "NGÀY LÀM VIỆC" in label_text:
+                workday = value.text.strip()
 
-            if label_text == "SỐ NĂM KINH NGHIỆM TỐI THIỂU":
-                experience_value = next_p.get_text(strip=True) if next_p else ""
-            elif label_text == "NGÀY LÀM VIỆC":
-                work_day_value = next_p.get_text(strip=True) if next_p else ""
-
-    # Trả kết quả
-    return {
-        "title": job_title,
-        "link": url,
-        "salary": salary,
-        "location": location,
-        "experience": experience_value,
-        "description": job_description,
-        "requirements": job_requirement,
-        "benefits": benefit,
-        "work_location_detail": location,
-        "working_time": work_day_value,
-        "deadline": deadline,
-    }
+        return {
+            "title": job_title,
+            "link": url,
+            "salary": salary,
+            "location": location,
+            "experience": exp,
+            "description": job_description,
+            "requirements": job_requirement,
+            "benefits": benefit,
+            "work_location_detail": location,
+            "working_time": workday,
+            "deadline": deadline,
+        }
+    except Exception as e:
+        print(f"[WARN] Bỏ qua job lỗi {url}: {e}")
+        return None
 
 
-# ==========================================================
-# 🧭 HÀM CHÍNH CRAWL
-# ==========================================================
-
-def scrape_jobs_by_skill(driver, skill_name, skill_url, max_pages=10):
-    """Crawl tất cả job thuộc một skill, tự skip nếu trang lỗi liên tiếp."""
+def scrape_jobs_by_skill(skill_name, skill_url, max_pages=10):
+    """Crawl 1 skill – luôn tạo driver mới, không crash toàn bộ."""
+    driver = None
     jobs = []
-    page = 1
-    fail_streak = 0
+    fail_pages = 0
 
-    while page <= max_pages:
-        print(f"[INFO] Scraping skill={skill_name}, page={page}")
-        try:
-            driver.get(f"{skill_url}&page={page}")
-            time.sleep(1.5)
-            fail_streak = 0  # reset khi thành công
-        except Exception as e:
-            print(f"[WARN] Page {page} failed for {skill_name}: {e}")
-            fail_streak += 1
-            if fail_streak >= 3:
-                print(f"[WARN] ❌ Quá nhiều lỗi liên tiếp, dừng kỹ năng {skill_name}.")
-                break
-            page += 1
-            continue
+    try:
+        driver = init_vnwork_driver()
+        for page in range(1, max_pages + 1):
+            url_page = f"{skill_url}&page={page}"
+            print(f"[PAGE] {skill_name} → {url_page}")
 
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        job_containers = soup.find_all("div", class_="sc-iVDsrp frxvCT")
-        if not job_containers:
-            print(f"[INFO] No more jobs found at page {page}")
-            break
-
-        for container in job_containers:
-            a_tag = container.find("a", class_="img_job_card")
-            if not a_tag:
-                continue
-            url = a_tag.get("href")
-            if not url:
-                continue
-
-            full_url = "https://www.vietnamworks.com" + url
             try:
-                info = get_info(full_url, driver)
-                jobs.append(info)
+                driver.set_page_load_timeout(60)
+                driver.get(url_page)
+                human_delay(2, 1)
+                soup = BeautifulSoup(driver.page_source, "html.parser")
+                job_containers = soup.find_all("div", class_="sc-iVDsrp frxvCT")
+
+                if not job_containers:
+                    fail_pages += 1
+                    print(f"[INFO] Trang {page} rỗng ({fail_pages}/2).")
+                    if fail_pages >= 2:
+                        print(f"[SKIP] Bỏ qua skill {skill_name} (2 trang liên tiếp rỗng).")
+                        break
+                    continue
+                else:
+                    fail_pages = 0
+
+                fail_jobs = 0
+                for container in job_containers:
+                    a_tag = container.find("a", class_="img_job_card")
+                    if not a_tag:
+                        continue
+                    job_link = a_tag.get("href")
+                    if not job_link:
+                        continue
+
+                    full_url = "https://www.vietnamworks.com" + job_link
+                    job_data = get_info(full_url, driver)
+                    if job_data:
+                        jobs.append(job_data)
+                    else:
+                        fail_jobs += 1
+
+                if fail_jobs >= 4:
+                    print(f"[WARN] Trang {page} có {fail_jobs} job lỗi → bỏ skill {skill_name}.")
+                    break
+
+                human_delay(1.2, 0.5)
+
             except Exception as e:
-                print(f"[ERROR] Failed to crawl job at {full_url}: {e}")
+                print(f"[ERROR] Lỗi khi crawl trang {page} ({url_page}): {e}")
+                fail_pages += 1
+                if fail_pages >= 2:
+                    print(f"[SKIP] Liên tiếp 2 lỗi trang → bỏ skill {skill_name}")
+                    break
                 continue
-
-        page += 1
-        time.sleep(1.0 + (page % 3) * 0.5)
-
+    finally:
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
+                
     return jobs
 
-def run_vnwork_crawler():
-    driver = init_vnwork_driver()
 
-    print("[INFO] Opening Vietnamworks...")
+def run_vnwork_crawler():
+    print("[INFO] Truy cập trang chủ Vietnamworks...")
+    driver = init_vnwork_driver()
     driver.get(BASE_IT_VNWORK)
-    time.sleep(10)
+    human_delay(10, 2)
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
+    driver.quit()
+
     skills_div = soup.find("div", class_="skill-tag-details")
     if not skills_div:
-        print("[ERROR] Không tìm thấy danh sách kỹ năng. Có thể bị chặn.")
-        driver.quit()
+        print("[ERROR] ❌ Không tìm thấy danh sách kỹ năng.")
         return
 
     skill_elements = skills_div.find_all("div", class_="tag-wrapper")
-    output_path = get_output_file(prefix="vnwork")
-    print(f"[INFO] Found {len(skill_elements)} skills, saving to {output_path}")
+    print(f"[INFO] Found {len(skill_elements)} kỹ năng")
+
+    base_dir = get_base_dir()
+    output_path = get_output_file("vnwork")
+    print(f"[SAVE PATH] {output_path}")
 
     for idx, skill_el in enumerate(skill_elements, 1):
         skill_name = skill_el.get_text(strip=True)
         skill_url = f"https://www.vietnamworks.com/viec-lam?q={skill_name.lower().replace(' ', '-')}"
+        print(f"\n=== [{idx}/{len(skill_elements)}] Crawling: {skill_name} ===")
 
-        print(f"\n=== [{idx}/{len(skill_elements)}] Crawling {skill_name} ===")
-
-        # 👉 Khởi tạo driver riêng cho từng kỹ năng
-        driver = init_vnwork_driver()
-        time.sleep(3)
-
+        jobs = []
         try:
-            jobs = scrape_jobs_by_skill(driver, skill_name, skill_url)
-            if jobs:
-                save_json([{"group": skill_name, "jobs": jobs}], output_path)
-                print(f"[SAVE] {len(jobs)} jobs saved for {skill_name}")
-            else:
-                print(f"[WARN] No jobs found for {skill_name}")
+            jobs = scrape_jobs_by_skill(skill_name, skill_url, max_pages=5)
         except Exception as e:
-            print(f"[ERROR] Skill {skill_name} failed: {e}")
-        finally:
-            driver.quit()
-            os.system("pkill -f chrome || true")  # 🧹 đảm bảo kill Chrome zombie
-            time.sleep(2)
-    print(f"[DONE] ✅ Tất cả dữ liệu đã lưu vào {output_path}")
+            print(f"[ERROR] Skill {skill_name} bị lỗi nặng: {e}")
 
-# ==========================================================
-# 🏁 ENTRYPOINT
-# ==========================================================
+        # Lưu file tạm (kể cả rỗng, để dễ tracking)
+        save_temp_json([{"group": skill_name, "jobs": jobs}], base_dir, idx)
+        print(f"✅ Đã lưu {len(jobs)} job cho {skill_name}")
+
+        human_delay(2, 1)
+
+    # Gộp tất cả part lại
+    merge_temp_files(base_dir, output_path)
+    cleanup_temp(base_dir)
+
+    print(f"[DONE] ✅ Dữ liệu lưu tại: {output_path}")
+
+
 if __name__ == "__main__":
     run_vnwork_crawler()

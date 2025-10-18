@@ -19,14 +19,12 @@ LOG_DAY_DIR = os.path.join(LOG_DIR, TODAY)
 os.makedirs(DATASET_DAY_DIR, exist_ok=True)
 os.makedirs(LOG_DAY_DIR, exist_ok=True)
 
-def get_output_file(prefix="vnwork"):
-    """
-    Trả về đường dẫn file JSON trong thư mục ngày, ví dụ:
-    /opt/airflow/crawler/Dataset/2025-10-06/vnwork_2025-10-06.json
-    """
-    return os.path.join(DATASET_DAY_DIR, f"{prefix}_{TODAY}.json")
-
-
+# def get_output_file(prefix="vnwork"):
+#     """
+#     Trả về đường dẫn file JSON trong thư mục ngày, ví dụ:
+#     /opt/airflow/crawler/Dataset/2025-10-06/vnwork_2025-10-06.json
+#     """
+#     return os.path.join(DATASET_DAY_DIR, f"{prefix}_{TODAY}.json")
 # Chrome config
 HEADLESS = True
 CHROMEDRIVER_PATH = "/usr/local/bin/chromedriver"

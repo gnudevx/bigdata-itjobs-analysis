@@ -50,12 +50,13 @@ x-airflow-common:
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   &airflow-common
   build: .
-  image: airflow-crawler:latest
   # build: .
   environment:
     # AIRFLOW__CORE__EXECUTOR: LocalExecutor
     &airflow-common-env
+    AIRFLOW__WEBSERVER__SECRET_KEY: airflowsecret123
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW_CONN_SPARK_DEFAULT: 'spark://?master=spark://hadoop-master:7077'
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -64,8 +65,6 @@ x-airflow-common:
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
-    # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
@@ -81,6 +80,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ../crawler/:/opt/airflow/crawler/
+    - ../spark_jobs/:/opt/airflow/spark_jobs/
+    - ../ml_jobs/:/opt/airflow/ml_jobs/
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
@@ -99,6 +100,9 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
       - ./dags:/opt/airflow/dags
+    networks:
+      - airflow_dags_default
+      - config-hadoop-hive-spark_default
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 10s
@@ -109,8 +113,16 @@ services:
     <<: *airflow-common
     shm_size: 2gb
     command: webserver
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW_CONN_SPARK_DEFAULT: 'spark://?master=spark://hadoop-master:7077'
+      SPARK_HOME: /usr/local/spark
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     ports:
       - "8080:8080"
+    networks:
+      - airflow_dags_default
+      - config-hadoop-hive-spark_default
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
       interval: 30s
@@ -126,6 +138,9 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    networks:
+      - airflow_dags_default
+      - config-hadoop-hive-spark_default
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://localhost:8974/health" ]
       interval: 30s
@@ -141,6 +156,9 @@ services:
   airflow-dag-processor:
     <<: *airflow-common
     command: dag-processor
+    networks:
+      - airflow_dags_default
+      - config-hadoop-hive-spark_default
     healthcheck:
       test: [ "CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"' ]
       interval: 30s
@@ -152,7 +170,6 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
-
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
@@ -173,6 +190,9 @@ services:
     <<: *airflow-common
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
+    networks:
+      - airflow_dags_default
+      - config-hadoop-hive-spark_default
     command:
       - -c
       - |
@@ -278,3 +298,8 @@ services:
 
 volumes:
   postgres-db-volume:
+networks:
+  airflow_dags_default:
+    driver: bridge
+  config-hadoop-hive-spark_default:
+    external: true

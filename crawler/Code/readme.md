@@ -30,3 +30,11 @@ core/utils.py:
 - human_scroll(driver) → scroll nhẹ để kích lazy-load.
 
 - save_json(obj, path) → ghi file theo kiểu append/merge an toàn.
+
+
+để chạy được khi crawl đẩy lên hdfs thì mình phải thiết lập mạng giữa 2 môi trường:
+docker network ls -- câu lệnh để xem dữ liệu mạng giữa các thiết lập môi trường
+docker network connect config-hadoop-hive-spark_default airflow_dags-airflow-webserver-1
+docker network connect config-hadoop-hive-spark_default airflow_dags-airflow-scheduler-1
+docker network connect config-hadoop-hive-spark_default airflow_dags-airflow-triggerer-1
+docker network connect config-hadoop-hive-spark_default airflow_dags-airflow-dag-processor-1

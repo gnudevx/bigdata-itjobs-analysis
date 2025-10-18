@@ -12,11 +12,11 @@
 
     <property>
         <name>yarn.resourcemanager.scheduler.address</name>
-        <value>ducdung-master:9002</value>
+        <value>ducdung-master:8030</value>
     </property>
     <property>
         <name>yarn.resourcemanager.address</name>
-        <value>ducdung-master:9003</value>
+        <value>ducdung-master:8032</value>
     </property>
     <property>
         <name>yarn.resourcemanager.webapp.address</name>
@@ -28,7 +28,7 @@
     </property>
     <property>
         <name>yarn.resourcemanager.admin.address</name>
-        <value>ducdung-master:9006</value>
+        <value>ducdung-master:8033</value>
     </property>
     <property>
         <name>yarn.scheduler.maximum-allocation-mb</name>
